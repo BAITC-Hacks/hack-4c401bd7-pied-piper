@@ -12,6 +12,7 @@ import streamlit.components.v1 as components
 from src.view import FILES, LABELS, load_bundle, make_graph, select_ego
 from src.graph_ui import ego_html, overview_html
 from src.presentation import ROLE_GUIDANCE, priority_parts, priority_explanation
+from src.resilience import compare_removals
 from validate import ValidationError
 from src.bundle_io import resolve_run
 
@@ -39,6 +40,56 @@ def cached_ego(nodes, edges, gid, hops, color_by, limit, graph_revision):
 def cached_overview(nodes, edges, clusters, visible, graph_revision):
     from src.view import Bundle
     return overview_html(Bundle(nodes, edges, clusters, pd.DataFrame(), {}, {}, {}), visible)
+
+
+@st.cache_data(show_spinner=False)
+def cached_resilience(nodes, edges, n):
+    return compare_removals(nodes, edges, n)
+
+
+def render_resilience(bundle):
+    st.subheader('Что будет без ключевых узлов?')
+    st.write('Сравните исключение клиентов по нашему приоритету и просто по обороту. '
+             'Эксперимент использует всю сеть, независимо от фильтров и лимитов графа.')
+    n = st.select_slider('Сколько клиентов исключить из модели', options=[1, 3, 5, 10],
+                         value=5, key='resilience_n')
+    result = cached_resilience(bundle.nodes, bundle.edges, n)
+    labels = {'baseline': 'Исходная сеть', 'priority': 'По приоритету', 'turnover': 'По обороту'}
+    fields = [
+        ('Исключено клиентов', 'removed_nodes', 'count'),
+        ('Осталось клиентов', 'remaining_nodes', 'count'),
+        ('Связных групп', 'components', 'count'),
+        ('Крупнейшая группа, клиентов', 'largest_component', 'count'),
+        ('Крупнейшая / оставшиеся', 'largest_share', 'percent'),
+        ('Новых изолятов', 'new_isolates', 'count'),
+        ('Разобщённых пар оставшихся', 'disconnected_pair_share', 'percent'),
+        ('Затронуто переводов, KZT', 'affected_kzt', 'money'),
+        ('Доля суммы переводов', 'affected_share', 'percent'),
+    ]
+    rows = []
+    for title, key, kind in fields:
+        row = {'Показатель': title}
+        for strategy, label in labels.items():
+            value = result[strategy][key]
+            row[label] = (f'{value * 100:.2f}%' if kind == 'percent' else
+                          f'{value:,.2f}'.replace(',', ' ') if kind == 'money' else str(value))
+        rows.append(row)
+    st.dataframe(pd.DataFrame(rows), hide_index=True, width='stretch', height=355)
+    st.caption('Связные группы — слабые компоненты, включая изоляты: направление не учитывается '
+               'только при проверке связности. Разобщённые пары — оставшиеся клиенты, ранее '
+               'связанные путём, а теперь разделённые; исключённые клиенты в знаменатель не входят. '
+               'Перевод между двумя исключёнными клиентами учитывается в сумме один раз.')
+    st.caption('Приоритет ручной проверки не оптимизировался для разрушения связности. '
+               'Более сильный распад в одном сценарии не доказывает более точное выявление нарушений.')
+    with st.expander('Какие клиенты исключены и как выбран порядок'):
+        for strategy in ('priority', 'turnover'):
+            st.markdown(f'**{labels[strategy]}**')
+            st.code(', '.join(result[strategy]['removed_gids']) or 'Нет клиентов', language=None)
+        st.caption('Оборот = наблюдаемый вход + выход. При равенстве — gid численно по возрастанию. '
+                   'Оба списка фиксируются до исключения; роли и приоритеты не пересчитываются.')
+    st.warning('Это симуляция на неполной наблюдаемой сети, не рекомендация блокировки счетов. '
+               'Затронутый объём — исторические переводы, не предотвращённый ущерб. '
+               'Перенаправление потоков не моделируется. Роли, CSV и исходные файлы не меняются.')
 
 
 def choose_client(gid):
@@ -216,6 +267,8 @@ def main():
         for col, label, value in zip(cols, ['Клиенты', 'Сообщества', 'Несвязанные части', 'Клиенты без связей'],
                                   [len(nodes), len(bundle.clusters), bundle.report['n_components'], bundle.report['n_isolates']]):
             col.metric(label, value)
+        with st.expander('Устойчивость сети: исключение ключевых узлов'):
+            render_resilience(bundle)
         html, hidden, hidden_edges = cached_overview(nodes, bundle.edges, bundle.clusters, tuple(sorted(filtered.cluster_id.unique())), GRAPH_REVISION)
         components.html(html, height=680, scrolling=True)
         if hidden or hidden_edges:

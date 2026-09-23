@@ -55,3 +55,23 @@ def test_queue_click_and_search_from_overview(sample, monkeypatch):
     assert app.radio(key='workspace').value == 'Проверка клиентов'
     assert any(item.value == f'Клиент {gids[22]}' for item in app.subheader)
     assert not app.exception
+
+
+def test_resilience_controls_full_network_and_bundle_unchanged(sample, monkeypatch):
+    out, _, _ = sample
+    original = {path.name: path.read_bytes() for path in out.iterdir() if path.is_file()}
+    monkeypatch.setattr(sys, 'argv', ['app.py', '--outputs', str(out)])
+    app = AppTest.from_file(APP, default_timeout=30).run()
+    app.radio(key='workspace').set_value('Сеть и сообщества').run()
+    assert not app.exception
+    table = next(item.value for item in app.dataframe if 'Показатель' in item.value).set_index('Показатель')
+    assert table.loc['Исключено клиентов'].tolist() == ['0', '5', '5']
+    assert table.loc['Осталось клиентов'].tolist() == ['24', '19', '19']
+    app.select_slider(key='resilience_n').set_value(10).run()
+    app.slider[0].set_value(1.0).run()
+    assert not app.exception
+    table = next(item.value for item in app.dataframe if 'Показатель' in item.value).set_index('Показатель')
+    assert table.loc['Исключено клиентов'].tolist() == ['0', '10', '10']
+    assert table.loc['Осталось клиентов'].tolist() == ['24', '14', '14']
+    assert any('не рекомендация блокировки' in item.value for item in app.warning)
+    assert original == {path.name: path.read_bytes() for path in out.iterdir() if path.is_file()}

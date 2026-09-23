@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="360" viewBox="0 0 1280 360" role="img" aria-labelledby="title desc">
+<title id="title">Money Graph — HackAlem AI · Freedom track · Pied Piper</title>
+<desc id="desc">Граф денег. Объяснимая аналитика финансовых связей: кого проверить первым и почему.</desc>
+<defs>
+  <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#0b1322"/><stop offset="1" stop-color="#152b36"/></linearGradient>
+  <radialGradient id="glow"><stop stop-color="#49c9bd" stop-opacity=".18"/><stop offset="1" stop-color="#49c9bd" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="1280" height="360" rx="24" fill="url(#bg)"/>
+<circle cx="1050" cy="160" r="255" fill="url(#glow)"/>
+<g font-family="Arial, Helvetica, sans-serif">
+  <rect x="48" y="35" width="164" height="32" rx="16" fill="#49c9bd"/>
+  <text x="130" y="56" text-anchor="middle" font-size="14" font-weight="700" fill="#0b1322">HACKALEM AI</text>
+  <rect x="224" y="35" width="174" height="32" rx="16" fill="#92c83e"/>
+  <text x="311" y="56" text-anchor="middle" font-size="14" font-weight="700" fill="#14220a">FREEDOM TRACK</text>
+  <text x="48" y="139" font-size="58" font-weight="700" letter-spacing="-2" fill="#f4f8fc">Money Graph</text>
+  <text x="49" y="181" font-size="24" fill="#cad9e8">Граф денег · объяснимая аналитика связей</text>
+  <text x="49" y="230" font-size="21" fill="#49c9bd">Кого проверить первым — и почему?</text>
+  <line x1="49" y1="263" x2="656" y2="263" stroke="#304454"/>
+  <text x="49" y="298" font-size="14" font-weight="700" letter-spacing="2" fill="#e6edf8">PIED PIPER</text>
+  <text x="49" y="323" font-size="13" fill="#95aabc">ASTANA · 23 SEPTEMBER 2026</text>
+  <text x="656" y="310" text-anchor="end" font-size="14" fill="#95aabc">Факты → роли → очередь проверки</text>
+</g>
+<g stroke="#4c7c85" stroke-width="2" fill="none">
+  <path d="M790 83 902 122 1018 63 1147 113 1184 238 1073 287 960 231 822 285 780 186 902 122 960 231 1073 287"/>
+  <path d="M790 83 780 186 960 231 1018 63M902 122 1047 173 1147 113M1047 173 1184 238M1047 173 1073 287M822 285 902 122"/>
+</g>
+<g fill="#142938" stroke="#49c9bd" stroke-width="3">
+  <circle cx="790" cy="83" r="9"/><circle cx="780" cy="186" r="12"/>
+  <circle cx="822" cy="285" r="8"/><circle cx="1018" cy="63" r="11"/>
+  <circle cx="1147" cy="113" r="13"/><circle cx="1184" cy="238" r="9"/>
+  <circle cx="1073" cy="287" r="12"/>
+</g>
+<circle cx="902" cy="122" r="24" fill="#49c9bd" fill-opacity=".12"/>
+<circle cx="902" cy="122" r="15" fill="#49c9bd"/>
+<circle cx="960" cy="231" r="16" fill="#92c83e"/>
+<circle cx="1047" cy="173" r="33" fill="#92c83e" fill-opacity=".12"/>
+<circle cx="1047" cy="173" r="22" fill="#92c83e"/>
+<circle cx="1047" cy="173" r="6" fill="#142938"/>
+</svg>

@@ -24,6 +24,7 @@ CMD ["python", "-m", "streamlit", "run", "app.py", "--server.address=0.0.0.0", "
 FROM app AS tests
 COPY requirements.lock ./
 RUN --mount=type=cache,target=/root/.cache/pip pip install --no-compile -r requirements.lock
+COPY scripts/audit_evidence.py ./scripts/audit_evidence.py
 COPY tests/ ./tests/
 CMD ["python", "-m", "pytest", "-q"]
 

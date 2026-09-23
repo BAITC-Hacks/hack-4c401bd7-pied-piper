@@ -1,4 +1,52 @@
-# Money Graph
+<p align="center">
+  <img src="docs/assets/money-graph-banner.svg" alt="Money Graph — HackAlem AI · трек Freedom · команда Pied Piper" width="100%">
+</p>
+
+<h1 align="center">Money Graph · Граф денег</h1>
+
+<p align="center">
+  <strong>HackAlem AI · Трек Freedom · Команда Pied Piper</strong><br>
+  Объяснимая аналитика денежных потоков — от переводов до очереди ручной проверки.
+</p>
+
+<p align="center">
+  <a href="https://www.hackalem.ai/"><img alt="HackAlem AI 2026" src="https://img.shields.io/badge/HackAlem_AI-2026-49c9bd?style=flat-square"></a>
+  <img alt="Трек Freedom" src="https://img.shields.io/badge/Track-Freedom-92c83e?style=flat-square">
+  <img alt="Python 3.12" src="https://img.shields.io/badge/Python-3.12-3776ab?style=flat-square&amp;logo=python&amp;logoColor=white">
+  <img alt="Docker Compose" src="https://img.shields.io/badge/Docker-Compose-2496ed?style=flat-square&amp;logo=docker&amp;logoColor=white">
+  <img alt="Объяснимые правила" src="https://img.shields.io/badge/Explainable-Rule_based-49c9bd?style=flat-square">
+</p>
+
+<p align="center">
+  <a href="#локальный-запуск"><strong>Запустить</strong></a> ·
+  <a href="docs/methodology.md">Методология</a> ·
+  <a href="docs/demo.md">Демо для жюри</a> ·
+  <a href="docs/backend.md">Backend / API</a> ·
+  <a href="docs/README.md">Вся документация</a>
+</p>
+
+| Данные | Аналитика | Результат |
+| :--- | :--- | :--- |
+| **2 248** клиентов · **3 119** связей | **6** объяснимых ролей · **105** сообществ | **Top-20** для проверки · **3 CSV** |
+
+> **Кейс трека Freedom:** восстановление финансовой структуры по графу переводов. Разработано на [HackAlem AI](https://www.hackalem.ai/), Астана, 23 сентября 2026.
+
+<details>
+<summary>Организаторы и партнёры HackAlem AI</summary>
+
+Среди организаторов и партнёров мероприятия на [официальном сайте HackAlem AI](https://www.hackalem.ai/) указаны Astana Hub, Silkroad Innovation Hub, OpenAI и BAITC.
+
+<p>
+  <a href="https://www.hackalem.ai/"><img alt="Astana Hub — партнёр мероприятия" src="https://img.shields.io/badge/Astana_Hub-18181b?style=flat-square"></a>
+  <a href="https://www.hackalem.ai/"><img alt="Silkroad Innovation Hub — партнёр мероприятия" src="https://img.shields.io/badge/Silkroad_Innovation_Hub-6454c0?style=flat-square"></a>
+  <a href="https://www.hackalem.ai/"><img alt="OpenAI — партнёр мероприятия" src="https://img.shields.io/badge/OpenAI-141414?style=flat-square"></a>
+  <a href="https://www.hackalem.ai/"><img alt="BAITC — партнёр мероприятия" src="https://img.shields.io/badge/BAITC-2563eb?style=flat-square"></a>
+</p>
+
+</details>
+
+
+---
 
 Локальный инструмент объяснимой AML-аналитики графа переводов команды Pied Piper.
 Роли и приоритеты — сигналы для ручной проверки, а не доказательства нарушения.

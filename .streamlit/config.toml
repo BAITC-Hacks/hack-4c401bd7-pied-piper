@@ -11,3 +11,4 @@ gatherUsageStats = false
 
 [server]
 headless = true
+port = 3000

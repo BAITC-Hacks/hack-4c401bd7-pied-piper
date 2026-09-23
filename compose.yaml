@@ -2,13 +2,21 @@ name: money-graph
 
 x-app: &app
   image: money-graph:local
-  build: .
   init: true
 
 services:
   pipeline:
     <<: *app
+    profiles: ["tools"]
     command: ["python", "pipeline.py", "--data", "/data", "--out", "/results"]
+    volumes:
+      - ./data:/data:ro
+      - results:/results
+    restart: "no"
+
+  prepare:
+    <<: *app
+    command: ["python", "scripts/ensure_results.py"]
     volumes:
       - ./data:/data:ro
       - results:/results
@@ -16,13 +24,16 @@ services:
 
   ui:
     <<: *app
+    build:
+      context: .
+      target: runtime
     depends_on:
-      pipeline:
+      prepare:
         condition: service_completed_successfully
     volumes:
       - results:/results:ro
     ports:
-      - "127.0.0.1:8501:8501"
+      - "127.0.0.1:3000:8501"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health', timeout=5).read()"]
       interval: 10s
@@ -40,7 +51,11 @@ services:
       - results:/results:ro
 
   tests:
-    <<: *app
+    image: money-graph-tests:local
+    build:
+      context: .
+      target: tests
+    init: true
     profiles: ["tools"]
     command: ["python", "-m", "pytest", "-q"]
 

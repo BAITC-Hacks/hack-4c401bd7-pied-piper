@@ -2,13 +2,21 @@ name: money-graph
 
 x-app: &app
   image: money-graph:local
-  build: .
   init: true
 
 services:
   pipeline:
     <<: *app
+    profiles: ["tools"]
     command: ["python", "pipeline.py", "--data", "/data", "--out", "/results"]
+    volumes:
+      - ./data:/data:ro
+      - results:/results
+    restart: "no"
+
+  prepare:
+    <<: *app
+    command: ["python", "scripts/ensure_results.py"]
     volumes:
       - ./data:/data:ro
       - results:/results
@@ -16,8 +24,11 @@ services:
 
   ui:
     <<: *app
+    build:
+      context: .
+      target: runtime
     depends_on:
-      pipeline:
+      prepare:
         condition: service_completed_successfully
     volumes:
       - results:/results:ro
@@ -40,7 +51,11 @@ services:
       - results:/results:ro
 
   tests:
-    <<: *app
+    image: money-graph-tests:local
+    build:
+      context: .
+      target: tests
+    init: true
     profiles: ["tools"]
     command: ["python", "-m", "pytest", "-q"]
 

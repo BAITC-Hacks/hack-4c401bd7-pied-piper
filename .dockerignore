@@ -9,6 +9,8 @@
 !src/**
 !tests/
 !tests/**
+!scripts/
+!scripts/ensure_results.py
 !.streamlit/
 !.streamlit/config.toml
 **/__pycache__/

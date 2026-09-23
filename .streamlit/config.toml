@@ -12,3 +12,6 @@ gatherUsageStats = false
 [server]
 headless = true
 port = 3000
+
+[client]
+toolbarMode = "minimal"

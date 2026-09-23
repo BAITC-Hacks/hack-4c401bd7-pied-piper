@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><style>
+*{box-sizing:border-box}body{margin:0;background:#101b2d;color:#e6edf8;font:13px system-ui,sans-serif}button,input{font:inherit}button{color:#dce8fa;background:#1b2b43;border:1px solid #344762;border-radius:6px;padding:7px 10px;cursor:pointer}button:hover,button.active{background:#274764;border-color:#49c9bd}button:focus-visible,input:focus-visible{outline:2px solid #49c9bd}.bar{display:flex;gap:6px;flex-wrap:wrap;padding:10px;align-items:center}.bar label{display:flex;align-items:center;gap:4px}.hint{padding:0 12px 8px;color:#9dafc6;font-size:12px}svg{display:block;width:100%;height:460px;background:radial-gradient(ellipse at center,#15243a,#0c1728);touch-action:none;cursor:grab}svg.dragging{cursor:grabbing}.node{cursor:grab}.node text{fill:#dce8fa;font-size:11px;paint-order:stroke;stroke:#101b2d;stroke-width:3px;pointer-events:none}.edge{fill:none;stroke:#8197b8;stroke-opacity:.4;stroke-width:1.1}.edge.active{stroke:#b3e5e1;stroke-opacity:.95;stroke-width:1.8}.edge.faded{stroke-opacity:.07}.node.faded{opacity:.2}.node circle{stroke:#c1d1e6;stroke-width:1}.node.focus circle{stroke:#fff;stroke-width:3}.info{padding:10px 12px;min-height:68px;line-height:1.6;border-top:1px solid #263a54}.info input{width:190px;background:#172941;color:#fff;border:1px solid #344762;border-radius:4px;padding:3px 6px}.legend{display:flex;flex-wrap:wrap;gap:6px 12px;padding:0 12px 9px;color:#bacbdf;font-size:11px}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}.lane{fill:#8099b9;font-size:15px;text-anchor:middle;pointer-events:none}.empty{fill:#bacbdf;font-size:16px;text-anchor:middle}
+</style></head><body>
+<div class="bar">
+<button id="flows">По потокам</button><button id="free">Свободно</button>
+<button id="fit" title="Показать все узлы">Вписать</button><button id="reset">Сбросить</button>
+<label><input id="labels" type="checkbox">Подписи</label>
+<label><input id="neighbors" type="checkbox">Только связи выбранного</label>
+</div>
+<div class="hint">Тяните узлы мышью · колесо — масштаб · фон — перемещение · клик — подсветка связей</div>
+<svg id="graph" role="img" aria-label="Интерактивный направленный граф">
+<defs><marker id="arrow" viewBox="0 -4 8 8" refX="8" refY="0" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,-3 L8,0 L0,3" fill="#95accb"/></marker></defs>
+<g id="world"><g id="lanes"></g><g id="edges"></g><g id="nodes"></g></g>
+</svg>
+<div class="info" id="info">Выберите узел, чтобы увидеть его идентификатор и связи.</div><div class="legend" id="legend"></div>
+<script id="graph-data" type="application/json">__GRAPH_DATA__</script>
+<script>
+'use strict';
+const data=JSON.parse(document.getElementById('graph-data').textContent);
+const $=id=>document.getElementById(id), svg=$('graph'), world=$('world'), NS='http://www.w3.org/2000/svg';
+const nodes=new Map(data.nodes.map(n=>[n.id,{...n,original:[n.x,n.y]}]));
+let focused=data.selected, hover=null, mode=data.selected?'flows':'free', scale=1, tx=0, ty=0, gesture=null;
+const elements=new Map(), edges=[];
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);parent.appendChild(e);return e;}
+for(const edge of data.edges){const path=el('path',{'class':'edge','marker-end':'url(#arrow)','data-source':edge.source,'data-target':edge.target},$('edges'));const title=el('title',{},path);title.textContent=`${edge.source} → ${edge.target}\n${edge.amount.toLocaleString('ru-RU')} KZT · ${edge.count} переводов`;edges.push({...edge,path});}
+for(const node of nodes.values()){
+ const group=el('g',{'class':'node','data-id':node.id,'tabindex':'0','role':'button','aria-label':node.id},$('nodes'));
+ el('circle',{r:node.radius,fill:node.color},group);const label=el('text',{y:-node.radius-6,'text-anchor':'middle'},group);label.textContent=node.label;
+ const title=el('title',{},group);title.textContent=`${node.id}\n${node.description}\nПриоритет ${node.priority.toFixed(3)}`;
+ elements.set(node.id,{group,label});
+ group.addEventListener('pointerdown',event=>start(event,node.id));
+ group.addEventListener('pointerenter',()=>{if(!gesture){hover=node.id;highlight();}});
+ group.addEventListener('pointerleave',()=>{hover=null;highlight();});
+ group.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();focused=node.id;highlight();info();}});
+}
+function transform(){world.setAttribute('transform',`translate(${tx} ${ty}) scale(${scale})`);}
+function draw(){
+ for(const node of nodes.values())elements.get(node.id).group.setAttribute('transform',`translate(${node.x} ${node.y})`);
+ const pairs=new Set(edges.map(e=>`${e.source}|${e.target}`));
+ for(const edge of edges){const a=nodes.get(edge.source),b=nodes.get(edge.target),dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1;
+  const ux=dx/len,uy=dy/len,x1=a.x+ux*(a.radius+2),y1=a.y+uy*(a.radius+2),x2=b.x-ux*(b.radius+3),y2=b.y-uy*(b.radius+3);
+  const bend=pairs.has(`${edge.target}|${edge.source}`)?18:0;
+  edge.path.setAttribute('d',`M${x1},${y1} Q${(x1+x2)/2-uy*bend},${(y1+y2)/2+ux*bend} ${x2},${y2}`);
+ }
+}
+function fit(){
+ if(!nodes.size){scale=1;tx=svg.clientWidth/2;ty=220;transform();return;}
+ const list=[...nodes.values()],xmin=Math.min(...list.map(n=>n.x))-45,xmax=Math.max(...list.map(n=>n.x))+45,ymin=Math.min(...list.map(n=>n.y))-60,ymax=Math.max(...list.map(n=>n.y))+40;
+ scale=Math.min(svg.clientWidth/(xmax-xmin),svg.clientHeight/(ymax-ymin),2);tx=svg.clientWidth/2-(xmin+xmax)/2*scale;ty=svg.clientHeight/2-(ymin+ymax)/2*scale;transform();
+}
+function lane(title,list,cx,cy){
+ if(!list.length)return;const cols=Math.ceil(Math.sqrt(list.length)),rows=Math.ceil(list.length/cols),gap=65;
+ list.forEach((n,i)=>{n.x=cx+(i%cols-(cols-1)/2)*gap;n.y=cy+(Math.floor(i/cols)-(rows-1)/2)*gap;});
+ el('text',{x:cx,y:cy-rows*gap/2-22,'class':'lane'},$('lanes')).textContent=title;
+}
+function layout(){
+ $('lanes').replaceChildren();
+ if(mode==='flows'&&data.selected){
+  const lists=[[],[],[],[]];for(const n of nodes.values()){if(n.id===data.selected){n.x=0;n.y=0;continue;}lists[n.flow==='both'?2:n.flow==='in'?0:n.flow==='out'?1:3].push(n);}
+  const spread=Math.max(230,...lists.map(list=>Math.ceil(Math.sqrt(list.length))*45+90));
+  lane('Отправители',lists[0],-spread,0);lane('Получатели',lists[1],spread,0);lane('Оба направления',lists[2],0,-spread);lane('Второй шаг',lists[3],0,spread);
+ }else{for(const n of nodes.values())[n.x,n.y]=n.original;
+  // Resolve overlapping circles without requiring a remote force-layout library.
+  const list=[...nodes.values()];for(let step=0;step<70;step++)for(let i=0;i<list.length;i++)for(let j=i+1;j<list.length;j++){
+   const a=list[i],b=list[j],dx=b.x-a.x||.1,dy=b.y-a.y||.1,d=Math.hypot(dx,dy),min=a.radius+b.radius+25;
+   if(d<min){const shift=(min-d)/2,ux=dx/d,uy=dy/d;a.x-=ux*shift;a.y-=uy*shift;b.x+=ux*shift;b.y+=uy*shift;}
+  }
+ }
+ $('flows').classList.toggle('active',mode==='flows');$('free').classList.toggle('active',mode==='free');draw();fit();highlight();
+}
+function highlight(){
+ const active=hover||focused,neighbors=new Set([active]);for(const e of edges)if(e.source===active||e.target===active){neighbors.add(e.source);neighbors.add(e.target);}
+ for(const e of edges){const related=e.source===active||e.target===active;e.path.classList.toggle('active',!!active&&related);e.path.classList.toggle('faded',!!active&&!related);e.path.style.display=$('neighbors').checked&&active&&!related?'none':'';}
+ for(const [id,{group,label}] of elements){group.classList.toggle('focus',id===focused);group.classList.toggle('faded',!!active&&!neighbors.has(id));label.style.display=$('labels').checked||id===active?'':'none';}
+}
+function info(){
+ const n=nodes.get(focused),box=$('info');box.replaceChildren();if(!n){box.textContent='Выберите узел, чтобы подсветить его связи.';return;}
+ const input=document.createElement('input');input.readOnly=true;input.value=n.id;input.setAttribute('aria-label',data.selected?'gid выбранного узла':'Номер кластера');input.addEventListener('click',()=>input.select());box.append(input);
+ const detail=document.createElement('span');detail.textContent=` · ${n.description} · приоритет ${n.priority.toFixed(3)}`;box.append(detail);
+ const note=document.createElement('div');note.style.color='#9dafc6';note.textContent=data.selected?'Для карточки другого клиента скопируйте полный gid в поиск слева. Позиции узлов не меняют расчёт.':'Показаны сообщества. Клик подсвечивает потоки; перетаскивание меняет только расположение.';box.append(note);
+}
+function point(event){const r=svg.getBoundingClientRect();return [event.clientX-r.left,event.clientY-r.top];}
+function start(event,id=null){if(event.button!==0)return;event.preventDefault();event.stopPropagation();const [x,y]=point(event);const n=nodes.get(id);gesture={id,x,y,tx,ty,nx:n?.x,ny:n?.y,moved:false,pointer:event.pointerId};svg.setPointerCapture(event.pointerId);svg.classList.add('dragging');}
+svg.addEventListener('pointerdown',event=>start(event));
+svg.addEventListener('pointermove',event=>{if(!gesture)return;const [x,y]=point(event),dx=x-gesture.x,dy=y-gesture.y;if(Math.hypot(dx,dy)>3)gesture.moved=true;if(gesture.id){const n=nodes.get(gesture.id);n.x=gesture.nx+dx/scale;n.y=gesture.ny+dy/scale;draw();}else{tx=gesture.tx+dx;ty=gesture.ty+dy;transform();}});
+function end(event){if(!gesture)return;if(event.type!=='pointercancel'){if(gesture.id)focused=gesture.id;else if(!gesture.moved)focused=null;}gesture=null;hover=null;svg.classList.remove('dragging');if(svg.hasPointerCapture(event.pointerId))svg.releasePointerCapture(event.pointerId);highlight();info();}
+svg.addEventListener('pointerup',end);svg.addEventListener('pointercancel',end);
+svg.addEventListener('wheel',event=>{event.preventDefault();const [x,y]=point(event),next=Math.max(.08,Math.min(8,scale*Math.exp(-event.deltaY*.001)));tx=x-(x-tx)*next/scale;ty=y-(y-ty)*next/scale;scale=next;transform();},{passive:false});
+$('flows').hidden=!data.selected;$('flows').onclick=()=>{mode='flows';layout();};$('free').onclick=()=>{mode='free';layout();};$('fit').onclick=fit;$('reset').onclick=()=>{focused=data.selected;layout();info();};$('labels').onchange=highlight;$('neighbors').onchange=highlight;
+const legend=new Map(data.nodes.map(n=>[n.group,n.color]));if(legend.size<=12)for(const [name,color] of legend){const span=document.createElement('span'),dot=document.createElement('i');dot.className='dot';dot.style.background=color;span.append(dot,document.createTextNode(name));$('legend').append(span);}
+if(!nodes.size)el('text',{x:0,y:0,'class':'empty'},$('nodes')).textContent='Нет узлов для выбранных фильтров';
+layout();info();new ResizeObserver(()=>fit()).observe(svg);
+</script></body></html>

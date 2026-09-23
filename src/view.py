@@ -137,7 +137,7 @@ def ego_figure(graph, nodes, gid, color_by='role'):
     return _figure(graph, attrs, color_by, gid, 'Связи выбранного клиента')
 
 
-def overview_figure(bundle, visible_clusters=None, limit=100):
+def overview_graph(bundle, visible_clusters=None, limit=100):
     clusters = bundle.clusters
     if visible_clusters is not None:
         clusters = clusters[clusters.cluster_id.isin(visible_clusters)]
@@ -155,4 +155,9 @@ def overview_figure(bundle, visible_clusters=None, limit=100):
     attrs = {str(row.cluster_id): {'cluster_id': row.cluster_id, 'priority_score': scores[row.cluster_id],
              'label': f'{row.n_nodes} узлов · {row.n_seed} seed · внутри {row.sum_kzt_internal:,.0f} KZT'}
              for row in shown.itertuples()}
-    return _figure(graph, attrs, 'cluster_id', title='Сообщества и потоки между ними'), len(ordered)-len(shown), max(0, graph.number_of_edges()-350)
+    return graph, attrs, len(ordered)-len(shown)
+
+
+def overview_figure(bundle, visible_clusters=None, limit=100):
+    graph, attrs, hidden = overview_graph(bundle, visible_clusters, limit)
+    return _figure(graph, attrs, 'cluster_id', title='Сообщества и потоки между ними'), hidden, max(0, graph.number_of_edges()-350)

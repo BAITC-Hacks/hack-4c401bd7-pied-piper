@@ -12,6 +12,7 @@ import streamlit.components.v1 as components
 from src.view import FILES, LABELS, load_bundle, make_graph, select_ego
 from src.graph_ui import ego_html, overview_html
 from src.presentation import ROLE_GUIDANCE, priority_parts, priority_explanation
+from src.explanations import role_gate
 from validate import ValidationError
 from src.bundle_io import resolve_run
 
@@ -71,6 +72,14 @@ def render_client(bundle, row, ranks):
     st.caption('Приоритет задаёт порядок ручной проверки. Поддержка роли от 0 до 1 отражает согласованность правил. Оба показателя — не вероятность нарушения.')
     st.markdown('**Почему стоит посмотреть**')
     st.info(row.evidence)
+    st.markdown('**Почему назначена эта роль**')
+    st.write(role_gate(row, bundle.manifest['thresholds']))
+    if row.role != 'peripheral':
+        st.caption('Среди допущенных ролей выбрана роль с максимальной базовой оценкой. Пороги рассчитаны по текущей выборке; числа показаны с округлением.')
+    if pd.notna(row.alternative_role):
+        st.write(f'Ближайшая альтернатива: **{LABELS[row.alternative_role]}**. '
+                 f'Базовые оценки: {row[f"score_{row.role}"]:.3f} и {row.alternative_score:.3f}; '
+                 f'разрыв {row.role_margin:.3f}. Чем меньше разрыв, тем менее однозначен выбор.')
     st.write(priority_explanation(row))
     with st.expander('Из чего складывается приоритет'):
         st.dataframe(pd.DataFrame(priority_parts(row), columns=['Фактор', 'Баллы из 100']), hide_index=True,

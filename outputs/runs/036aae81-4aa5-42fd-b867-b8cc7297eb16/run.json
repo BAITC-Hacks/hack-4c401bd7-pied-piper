@@ -1,0 +1,81 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "036aae81-4aa5-42fd-b867-b8cc7297eb16",
+  "status": "complete",
+  "input_sha256": {
+    "nodes.parquet": "d2a45b0df6e9352832d5fb09839d10b9e23f898156c3bab263b051b31cc0296d",
+    "edges.parquet": "4e71dde5cd3115bcb26e91202665532ee6581cf8233a9fc8059ea59fb7358a38",
+    "transactions.parquet": "c30c5317b5439591dde86f2058dc47a3d19b2900c055ded994fe547f6fb7e7da"
+  },
+  "output_sha256": {
+    "nodes_roles.csv": "74eeddc22d06fa4dcc1e30767dcabf6d525aecc5c94a5f9e799a2413ee2b3b92",
+    "clusters.csv": "6d6c535b528a6bcd26111f241e01214b07f2320f07c34c23d58c556589a394ce",
+    "top_nodes.csv": "f5540d8797cc026c49ef35042581ff8c506025187328bd3b86c083948d6a7fd2",
+    "node_metrics.parquet": "4c4cd08927d52d95c3423c2a1804b7fd5247630d8e01a7ad0ed1c8cde74f02db",
+    "edges.parquet": "f91b4ad47ad0f401123067a9fb3df04b41383849b83f3b4373ff8bc0b54da57f"
+  },
+  "counts": {
+    "nodes": 2248,
+    "edges": 3119,
+    "transactions": 4840,
+    "seeds": 81,
+    "components": 35,
+    "clusters": 105
+  },
+  "versions": {
+    "python": "3.12.12",
+    "methodology": "lane-a-v1",
+    "numpy": "2.2.6",
+    "pandas": "2.2.3",
+    "pyarrow": "19.0.1",
+    "networkx": "3.4.2",
+    "scipy": "1.15.3"
+  },
+  "seed": 42,
+  "thresholds": {
+    "in_degree_min": 2,
+    "out_degree_min": 3,
+    "terminal_in_kzt_min": 166819.7,
+    "transit_balance_min": 0.591788904179305,
+    "coordinator_betweenness_min": 8.821131212763214e-05
+  },
+  "normalization_scales": {
+    "in_deg": 1.3862943611198906,
+    "out_deg": 2.8532187889001994,
+    "in_kzt": 13.338640712193682,
+    "out_kzt": 14.6626121219616,
+    "in_tx": 2.0794415416798357,
+    "out_tx": 3.2713056528154794,
+    "betweenness": 0.0015573896230646502,
+    "pagerank": 0.0009668679994730213,
+    "cross_cluster_degree": 2.2235647062506763,
+    "turnover_kzt": 14.18843607111868
+  },
+  "priority_weights": {
+    "structure": 0.35,
+    "seed_proximity": 0.2,
+    "magnitude": 0.3,
+    "role_support": 0.15
+  },
+  "stage_runtimes_seconds": {
+    "load": 0.057949814003222855,
+    "features": 0.43229927199718077,
+    "roles": 0.050340066001808736,
+    "export": 0.23422920200027875,
+    "validation": 1.1073728489973291,
+    "total": 1.8956698970032448
+  },
+  "role_distribution": {
+    "consolidator": 364,
+    "distributor": 143,
+    "transit": 106,
+    "terminal": 138,
+    "coordinator": 2,
+    "peripheral": 1495
+  },
+  "warnings": [],
+  "validation": {
+    "status": "passed",
+    "validator_version": "1.0.0"
+  }
+}

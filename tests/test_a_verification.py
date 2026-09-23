@@ -3,6 +3,7 @@
 import pandas as pd
 import pytest
 from subprocess import CompletedProcess
+from types import SimpleNamespace
 
 from src.data import load_data
 from src.engine import build_features, normalize, score_roles
@@ -210,3 +211,41 @@ def test_failed_candidate_does_not_replace_current(tmp_path, monkeypatch):
         run_pipeline(data, out, expected_nodes=len(nodes))
     assert (out / "current.json").read_bytes() == before
     assert previous.exists()
+
+
+def test_shuffled_input_rows_do_not_change_features_or_roles():
+    _, nodes, edges, transactions = graph_tables()
+    original = score_roles(build_features(nodes, edges, transactions)[0])
+    shuffled = score_roles(build_features(
+        nodes.sample(frac=1, random_state=7),
+        edges.sample(frac=1, random_state=8),
+        transactions.sample(frac=1, random_state=9),
+    )[0])
+    pd.testing.assert_frame_equal(original, shuffled)
+    assert original.attrs == shuffled.attrs
+
+
+@pytest.mark.parametrize("total_seconds", [299.99, 300.0, 301.0])
+def test_publication_runtime_limit_is_strict_and_preserves_previous_run(
+    tmp_path, monkeypatch, total_seconds
+):
+    _, nodes, edges, transactions = graph_tables()
+    data, out = tmp_path / "data", tmp_path / "outputs"
+    write_tables(data, nodes, edges, transactions)
+    previous = run_pipeline(data, out, expected_nodes=len(nodes))
+    pointer_before = (out / "current.json").read_bytes()
+    files_before = {path.name: path.read_bytes() for path in previous.iterdir()}
+    # Replace only pipeline's clock, not the time module used by subprocess.
+    ticks = iter([0, 1, 2, 3, 4, 5, 6, total_seconds])
+    monkeypatch.setattr("pipeline.time", SimpleNamespace(monotonic=lambda: next(ticks)))
+    if total_seconds < 300:
+        published = run_pipeline(data, out, expected_nodes=len(nodes))
+        assert published != previous
+        assert load_bundle(out).manifest["stage_runtimes_seconds"]["total"] == total_seconds
+    else:
+        with pytest.raises(ValueError, match="runtime >=300"):
+            run_pipeline(data, out, expected_nodes=len(nodes))
+        assert (out / "current.json").read_bytes() == pointer_before
+        assert list((out / "runs").iterdir()) == [previous]
+        assert not list((out / ".staging").glob("*/run.json"))
+    assert {path.name: path.read_bytes() for path in previous.iterdir()} == files_before

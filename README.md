@@ -46,6 +46,29 @@ outputs/
 
 ## Запуск
 
+Быстрый запуск через GNU Make из корня проекта:
+
+```bash
+make setup
+make run
+```
+
+В Windows установка GNU Make не требуется: используйте включённый `make.cmd` из CMD или PowerShell:
+
+```powershell
+.\make.cmd setup
+.\make.cmd run
+```
+
+`setup` нужен при первой установке или изменении зависимостей; требуется доступный `uv`.
+`run` последовательно рассчитывает реальные данные из `data/`, проверяет `outputs/` и запускает интерфейс на **http://localhost:8502**. При ошибке следующий шаг не запускается. Остановка сервера — Ctrl+C.
+
+Для просмотра уже включённых результатов без пересчёта: `make ui` (Windows: `.\make.cmd ui`). Другие команды: `pipeline`, `validate`, `test`, `demo`, `help`. Только `demo` использует синтетические данные.
+
+Если сохранённый bundle выдаёт ошибку SHA256, выполните `make run` (Windows: `.\make.cmd run`): он создаст новый проверенный результат из исходных parquet.
+
+GNU Make принимает параметры, например `make ui PORT=8503 OUTPUTS=outputs`. Для `make.cmd` параметры `PORT`, `DATA`, `OUTPUTS` задаются переменными окружения (PowerShell: `$env:PORT = "8503"`).
+
 Требуется Python 3.10+; полный запуск проверен на Python 3.13.15 с версиями библиотек из `requirements.txt`. Зависимости также зафиксированы в `requirements.lock`.
 
 ```bash

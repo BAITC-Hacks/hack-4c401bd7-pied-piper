@@ -3,7 +3,14 @@ __pycache__/
 .pytest_cache/
 data/*
 !data/README.md
-outputs/
+!data/nodes.parquet
+!data/edges.parquet
+!data/transactions.parquet
+outputs/*
+!outputs/current.json
+!outputs/runs/
+outputs/runs/*
+!outputs/runs/036aae81-4aa5-42fd-b867-b8cc7297eb16/
 demo_data/
 demo_outputs/
 *.log

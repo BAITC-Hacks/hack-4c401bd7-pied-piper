@@ -69,8 +69,8 @@ frontend/            Streamlit, визуализация графа и HTML-ша
 docs/                архитектура, методология, контракты и отчёты аудита
 tests/               аналитические, API, UI и интеграционные проверки
 scripts/             служебные команды запуска и проверки
-data/                локальные исходные Parquet (не входят в Git)
-outputs/             локальные результаты расчёта (не входят в Git)
+data/                исходные Parquet для сдачи (включены в Git)
+outputs/             проверенный результат и current.json (включены в Git)
 .streamlit/          настройки Streamlit для запуска из корня проекта
 Dockerfile           общий runtime-образ и отдельная стадия tests
 compose.yaml         UI, подготовка результатов, API, worker и CLI
@@ -90,8 +90,8 @@ Windows PowerShell (нужен `uv`):
 ```
 
 Синтетический демонабор создаётся локально и не требует исходных данных.
-Для расчёта предоставленного набора разместите `nodes.parquet`, `edges.parquet`
-и `transactions.parquet` в `data/`, затем:
+Предоставленные `nodes.parquet`, `edges.parquet` и `transactions.parquet` уже
+включены в `data/`. Для повторного расчёта:
 
 ```powershell
 .\make.cmd run
@@ -113,7 +113,7 @@ python -m pytest -q
 
 ## Docker
 
-Для UI нужны три входных Parquet в `data/`:
+Три входных Parquet для UI уже включены в `data/`:
 
 ```bash
 docker compose build ui

@@ -7,6 +7,8 @@
 !validate.py
 !src/
 !src/**
+!backend/
+!backend/**
 !tests/
 !tests/**
 !scripts/

@@ -6,3 +6,7 @@ scipy==1.15.3
 streamlit==1.49.1
 plotly==6.3.0
 pytest==8.4.2
+fastapi==0.141.1
+uvicorn==0.53.0
+python-multipart==0.0.32
+httpx==0.28.1

@@ -14,6 +14,7 @@ ENV PATH="/opt/venv/bin:$PATH" PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
 COPY --from=builder /opt/venv /opt/venv
 COPY src/ ./src/
+COPY backend/ ./backend/
 COPY app.py pipeline.py validate.py ./
 COPY scripts/ensure_results.py ./scripts/ensure_results.py
 COPY .streamlit/config.toml ./.streamlit/config.toml

@@ -1,4 +1,4 @@
-/** Proposed frontend/API contract 1.0.0. No HTTP backend is implemented yet.
+/** Frontend/API contract 1.0.0. HTTP backend: backend/, setup: docs/backend.md.
  * gid/src/dst are opaque decimal strings: never convert them to JS Number.
  * Dates are YYYY-MM-DD; timestamps are RFC3339 UTC strings.
  */

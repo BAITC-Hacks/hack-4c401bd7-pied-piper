@@ -1,5 +1,26 @@
 # Архитектура Money Graph
 
+## Backend API и worker
+
+Локальный backend добавлен рядом с CLI/Streamlit. Streamlit не изменялся и не
+использует API. Путь будущего frontend определён контрактом.
+
+```mermaid
+flowchart LR
+  HTTP["HTTP /api/v1"] --> DB["SQLite: датасеты, задания, selection"]
+  HTTP --> READ["Чтение и проверка bundle"]
+  DB --> W["Отдельный worker + heartbeat"]
+  W --> P["pipeline.py: существующая аналитика"]
+  P --> V["validate.py"]
+  V --> FILES["runtime/results/runs/run_id"]
+  READ --> FILES
+  W --> DB
+```
+
+API выделяет run_id и сохраняет задания атомарно. Worker проверяет входы,
+рассчитывает и публикует результат с этим ID под защитой владения заданием.
+Результаты и изменяемый selection хранятся отдельно. Подробности: [backend.md](backend.md).
+
 ## Поток данных
 
 ```mermaid

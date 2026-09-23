@@ -12,7 +12,7 @@
 - Тестовый синтетический bundle для проверки интерфейса: `tests/fixtures/ui/make_fixture.py`.
 - Официальное описание входных parquet: [`data/README.md`](data/README.md).
 
-В checkout отсутствуют исходные parquet: они не входят в Git. В этом рабочем пространстве официальный набор доступен по `../Финансы/data/data`; pipeline и validator были запущены с этим путём без копирования данных в репозиторий. Опубликованный результат лежит локально в игнорируемом Git каталоге `outputs/`.
+Для оценки через приватный репозиторий исходные parquet включены в `data/`, а проверенный результат — в `outputs/`. После клонирования можно сразу проверить сохранённый bundle и открыть UI; повторный расчёт выполняется из тех же данных. `outputs/current.json` указывает на включённый в Git каталог `outputs/runs/<run_id>/` с тремя CSV, метриками, связями и manifest. Незавершённые staging-запуски и синтетические примеры в сдачу не входят.
 
 ## Вход и результат
 
@@ -61,11 +61,11 @@ uv pip sync --python .venv/bin/python requirements.lock
 ./run-ui.sh --outputs outputs
 ```
 
-В Windows PowerShell с имеющимся в этом workspace официальным набором:
+В Windows PowerShell из корня клонированного репозитория:
 
 ```powershell
-.\.venv\Scripts\python.exe pipeline.py --data ..\Финансы\data\data --out outputs
-.\.venv\Scripts\python.exe validate.py --data ..\Финансы\data\data --out outputs
+.\.venv\Scripts\python.exe pipeline.py --data data --out outputs
+.\.venv\Scripts\python.exe validate.py --data data --out outputs
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 

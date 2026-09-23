@@ -16,7 +16,7 @@ def ui_port(args):
             return arg.split('=', 1)[1]
         if arg == '--server.port' and index + 1 < len(args):
             return args[index + 1]
-    return '8501'
+    return '3000'
 
 
 def linux_stop(port):
@@ -76,7 +76,7 @@ Write-Output "Stopped $count project UI process(es) on port $env:MONEY_GRAPH_POR
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--port', type=int, default=8502)
+    parser.add_argument('--port', type=int, default=3000)
     args = parser.parse_args()
     if not 1 <= args.port <= 65535:
         parser.error('port must be between 1 and 65535')

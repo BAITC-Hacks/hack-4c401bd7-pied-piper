@@ -7,7 +7,7 @@ PYTHON := .venv/bin/python
 endif
 DATA ?= data
 OUTPUTS ?= outputs
-PORT ?= 8502
+PORT ?= 3000
 
 .PHONY: help setup pipeline validate ui stop run test demo
 

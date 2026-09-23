@@ -4,7 +4,7 @@ cd /d "%~dp0"
 set "PYTHON=.venv\Scripts\python.exe"
 if not defined DATA set "DATA=data"
 if not defined OUTPUTS set "OUTPUTS=outputs"
-if not defined PORT set "PORT=8502"
+if not defined PORT set "PORT=3000"
 if "%~1"=="" goto help
 if /i "%~1"=="help" goto help
 if /i "%~1"=="setup" goto setup

@@ -6,8 +6,10 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 
-from src.view import FILES, LABELS, ego_figure, load_bundle, make_graph, overview_figure, select_ego
+from src.view import FILES, LABELS, load_bundle, make_graph, select_ego
+from src.graph_ui import ego_html, overview_html
 from validate import ValidationError
 from src.bundle_io import resolve_run
 
@@ -20,16 +22,16 @@ def cached_bundle(path, fingerprint):
 
 
 @st.cache_data(show_spinner=False)
-def cached_ego(nodes, edges, gid, hops, color_by):
+def cached_ego(nodes, edges, gid, hops, color_by, limit):
     graph = make_graph(nodes, edges)
-    ego, hidden = select_ego(graph, gid, nodes, hops)
-    return ego_figure(ego, nodes, gid, color_by), hidden, max(0, ego.number_of_edges()-350)
+    ego, hidden = select_ego(graph, gid, nodes, hops, limit)
+    return ego_html(ego, nodes, gid, color_by), hidden, max(0, ego.number_of_edges()-350)
 
 
 @st.cache_data(show_spinner=False)
 def cached_overview(nodes, edges, clusters, visible):
     from src.view import Bundle
-    return overview_figure(Bundle(nodes, edges, clusters, pd.DataFrame(), {}, {}, {}), visible)
+    return overview_html(Bundle(nodes, edges, clusters, pd.DataFrame(), {}, {}, {}), visible)
 
 
 def main():
@@ -78,6 +80,7 @@ def main():
         component = st.selectbox('Компонента', ['Все'] + sorted(nodes.component_id.unique().tolist()))
         threshold = st.slider('Минимальный приоритет', 0.0, 1.0, 0.0, .01)
         hops = st.radio('Окрестность', [1, 2], format_func=lambda value: f'{value} шаг', horizontal=True)
+        node_limit = st.select_slider('Узлов на графе', options=[20, 40, 60, 100], value=40)
         color = st.radio('Цвет узлов', ['role', 'cluster_id'], format_func=lambda value: 'Роль' if value == 'role' else 'Кластер', horizontal=True)
     filtered = nodes[nodes.priority_score.ge(threshold)]
     if selected_roles:
@@ -114,7 +117,7 @@ def main():
     with overview:
         st.markdown('Каждая точка — сообщество клиентов. Стрелки показывают наблюдаемые потоки между сообществами.')
         fig, hidden, hidden_edges = cached_overview(nodes, bundle.edges, bundle.clusters, tuple(sorted(filtered.cluster_id.unique())))
-        st.plotly_chart(fig, use_container_width=True, key='overview_graph')
+        components.html(fig, height=680, scrolling=True)
         if hidden or hidden_edges:
             st.info(f'Для читаемости скрыто {hidden} кластеров и {hidden_edges} межкластерных связей; все кластеры доступны в таблице.')
         st.caption('Изолированные сообщества сохранены. Внутренние потоки отражены в таблице кластеров. '
@@ -128,11 +131,11 @@ def main():
             graph_column, details = st.columns([1.8, 1])
             row = nodes.set_index('gid').loc[gid]
             with graph_column:
-                fig, hidden, hidden_edges = cached_ego(nodes, bundle.edges, gid, hops, color)
-                st.plotly_chart(fig, use_container_width=True, key='ego_graph')
+                fig, hidden, hidden_edges = cached_ego(nodes, bundle.edges, gid, hops, color, node_limit)
+                components.html(fig, height=680, scrolling=True)
                 st.caption('Стрелка: плательщик → получатель. Окрестность включает входящие и исходящие связи; фильтры не скрывают соседей.')
                 if hidden or hidden_edges:
-                    st.info(f'Показаны до 100 узлов и 350 рёбер. Скрыто узлов: {hidden}; рёбер среди показанных узлов: {hidden_edges}. Все прямые связи — ниже.')
+                    st.info(f'Показаны до {node_limit} узлов и 350 рёбер. Скрыто узлов: {hidden}; рёбер среди показанных узлов: {hidden_edges}. Все прямые связи — ниже.')
             with details:
                 st.subheader(f'Клиент {gid}')
                 st.markdown(f'**{LABELS[row.role]}** · `{row.role}`')

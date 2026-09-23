@@ -10,6 +10,7 @@ import subprocess
 import sys
 import time
 from uuid import uuid4
+from contextlib import nullcontext
 
 from src.contracts import (
     CSV_OPTIONS, INPUT_SCHEMAS, OUTPUT_SCHEMAS, PRIORITY_WEIGHTS,
@@ -29,20 +30,27 @@ def _write_json(path: Path, value: dict) -> None:
                     encoding="utf-8")
 
 
-def run_pipeline(data: Path, out: Path, expected_nodes: int = 2248) -> Path:
+def run_pipeline(data: Path, out: Path, expected_nodes: int = 2248, *,
+                 run_id: str | None = None, on_stage=None, publication_guard=None) -> Path:
     """Publish a run only after its staging candidate passes validate.py."""
     start = time.monotonic()
+    from src.bundle_io import uuid_text
+    run_id = uuid_text(run_id) if run_id is not None else str(uuid4())
+    stage = on_stage or (lambda name: None)
     data, out = Path(data), Path(out)
+    stage("load")
     nodes, edges, transactions, diagnostics = load_data(data, expected_nodes=expected_nodes)
     loaded = time.monotonic()
+    stage("features")
     features, graph = build_features(nodes, edges, transactions)
     featured = time.monotonic()
+    stage("roles")
     scored = score_roles(features)
     thresholds = scored.attrs["thresholds"]
     scales = scored.attrs["normalization_scales"]
     scored_at = time.monotonic()
+    stage("export")
     roles, clusters, top, metrics = make_outputs(scored, edges)
-    run_id = str(uuid4())
     candidate = out / ".staging" / run_id
     candidate.mkdir(parents=True, exist_ok=False)
     for filename, frame in (
@@ -86,12 +94,13 @@ def run_pipeline(data: Path, out: Path, expected_nodes: int = 2248) -> Path:
         manifest["data_kind"] = "synthetic"
     _write_json(candidate / "candidate.json", manifest)
     command = [
-        sys.executable, str(Path(__file__).with_name("validate.py")),
+        sys.executable, "-X", "utf8", str(Path(__file__).with_name("validate.py")),
         "--data", str(data.resolve()), "--out", str(candidate.resolve()),
         "--candidate", "--expected-nodes", str(expected_nodes),
     ]
     validation_start = time.monotonic()
-    result = subprocess.run(command, capture_output=True, text=True)
+    stage("validation")
+    result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", timeout=300)
     stages["validation"] = time.monotonic() - validation_start
     stages["total"] = time.monotonic() - start
     if result.returncode:
@@ -108,10 +117,15 @@ def run_pipeline(data: Path, out: Path, expected_nodes: int = 2248) -> Path:
     runs = out / "runs"
     runs.mkdir(parents=True, exist_ok=True)
     published = runs / run_id
-    candidate.replace(published)
-    pointer = out / f"current.{run_id}.tmp"
-    _write_json(pointer, {"schema_version": SCHEMA_VERSION, "run_id": run_id})
-    os.replace(pointer, out / "current.json")
+    stage("publish")
+    # A worker may fence publication with its durable lease; CLI needs no guard.
+    with publication_guard() if publication_guard else nullcontext():
+        if published.exists():
+            raise ValueError("Run already published")
+        candidate.replace(published)
+        pointer = out / f"current.{run_id}.tmp"
+        _write_json(pointer, {"schema_version": SCHEMA_VERSION, "run_id": run_id})
+        os.replace(pointer, out / "current.json")
     return published
 
 

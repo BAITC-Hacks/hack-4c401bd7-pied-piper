@@ -1,8 +1,29 @@
 # Архитектура Money Graph
 
-Рабочая реализация — пакетный Python pipeline и read-only Streamlit UI. HTTP API из [frontend-контракта](frontend-contract.md) пока не реализован.
+Рабочая реализация включает пакетный Python pipeline, read-only Streamlit UI и отдельный локальный HTTP API с worker. Новый frontend из [контракта](frontend-contract.md) пока не реализован.
 
-## Компоненты
+## Backend API и worker
+
+Локальный backend добавлен рядом с CLI/Streamlit. Streamlit не изменялся и не
+использует API. Путь будущего frontend определён контрактом.
+
+```mermaid
+flowchart LR
+  HTTP["HTTP /api/v1"] --> DB["SQLite: датасеты, задания, selection"]
+  HTTP --> READ["Чтение и проверка bundle"]
+  DB --> W["Отдельный worker + heartbeat"]
+  W --> P["pipeline.py: существующая аналитика"]
+  P --> V["validate.py"]
+  V --> FILES["runtime/results/runs/run_id"]
+  READ --> FILES
+  W --> DB
+```
+
+API выделяет run_id и сохраняет задания атомарно. Worker проверяет входы,
+рассчитывает и публикует результат с этим ID под защитой владения заданием.
+Результаты и изменяемый selection хранятся отдельно. Подробности: [backend.md](backend.md).
+
+## Поток данных
 
 ```mermaid
 flowchart LR
@@ -19,6 +40,8 @@ flowchart LR
 ```
 
 `src/contracts.py` задаёт общие схемы v1.0.0. UI и validator не вызывают engine. Plotly-представления в `src/view.py` сохранены: модуль и его функции используются в существующих проверках; основной экран использует SVG/JavaScript.
+
+Backend и validator читают результаты через `src/results.py`, не зависящий от визуализации. Streamlit сохраняет существующий путь чтения через `src/view.py`.
 
 ## Публикация
 

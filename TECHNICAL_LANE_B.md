@@ -1,6 +1,6 @@
 # UI и validator — команды и контракт v1.0.0
 
-Источник схем — [src/contracts.py](src/contracts.py). Состояние продукта и основная установка описаны в [README](README.md). Эта инструкция относится к существующему Streamlit UI; [HTTP API](docs/frontend-contract.md) пока только спроектирован.
+Источник схем — [src/contracts.py](src/contracts.py). Состояние продукта и основная установка описаны в [README](README.md). Эта инструкция относится к существующему Streamlit UI; отдельные [HTTP API и worker](docs/backend.md) уже реализованы, но Streamlit к ним не подключён. Новый frontend пока не реализован.
 
 ## Запуск на Windows
 

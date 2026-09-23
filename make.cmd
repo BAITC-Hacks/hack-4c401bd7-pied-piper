@@ -8,6 +8,8 @@ if not defined PORT set "PORT=3000"
 if "%~1"=="" goto help
 if /i "%~1"=="help" goto help
 if /i "%~1"=="setup" goto setup
+if /i "%~1"=="backend" goto backend
+if /i "%~1"=="backend-test" goto backend-test
 if /i "%~1"=="pipeline" goto pipeline
 if /i "%~1"=="validate" goto validate
 if /i "%~1"=="ui" goto ui
@@ -24,6 +26,8 @@ echo Unknown command: "%~1". Use make.cmd help.
 exit /b 1
 
 :help
+echo make.cmd backend   Start local API and worker on port 8000
+echo make.cmd backend-test Run backend tests
 echo make.cmd docker-build Build runtime image once or after code updates
 echo make.cmd docker-up    Start built containers without rebuilding
 echo make.cmd docker-down  Stop containers and keep results
@@ -46,6 +50,14 @@ uv venv --python 3.12 .venv
 if errorlevel 1 exit /b 1
 :dependencies
 uv pip sync --python "%PYTHON%" requirements.lock
+exit /b %errorlevel%
+
+:backend
+"%PYTHON%" -m backend
+exit /b %errorlevel%
+
+:backend-test
+"%PYTHON%" -m pytest tests/test_backend.py -q
 exit /b %errorlevel%
 
 :docker-build

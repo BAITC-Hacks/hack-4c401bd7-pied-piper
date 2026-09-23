@@ -1,5 +1,12 @@
 .DEFAULT_GOAL := help
 
+.PHONY: backend backend-test
+backend:
+	"$(PYTHON)" -m backend
+
+backend-test:
+	"$(PYTHON)" -m pytest tests/test_backend.py -q
+
 ifeq ($(OS),Windows_NT)
 PYTHON := .venv/Scripts/python.exe
 else
@@ -12,6 +19,8 @@ PORT ?= 3000
 .PHONY: help setup pipeline validate ui stop run test demo docker-build docker-up docker-down docker-recompute docker-test
 
 help:
+	@echo "make backend  Start local API and worker on port 8000"
+	@echo "make backend-test Run backend tests"
 	@echo "make docker-build Build the runtime image once or after code updates"
 	@echo "make docker-up    Start built containers without rebuilding"
 	@echo "make docker-down  Stop containers and keep results"

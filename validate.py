@@ -325,7 +325,7 @@ def main():
     parser.add_argument('--candidate', action='store_true', help='Проверить staging/candidate.json до публикации')
     args = parser.parse_args()
     try:
-        from src.view import load_bundle
+        from src.results import load_bundle
         bundle = load_bundle(args.out, candidate=args.candidate)
         check_inputs(bundle, args.data, args.expected_nodes)
         if args.candidate:

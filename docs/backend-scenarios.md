@@ -56,7 +56,7 @@
 | 28 | Проверить безопасные ответы ошибок | Тело соответствует ApiError, request_id совпадает с заголовком; внутренние сообщения исключений скрыты | `assert_problem` в новых сценариях, `test_internal_error_is_safe_and_traceable` — пройдено |
 | 29 | Выполнить реальный HTTP-цикл | Импорт → worker → расчёт → top → карточки/графы → selection → четыре CSV | `test_official_http_workflow_and_api_worker_restart` — пройдено |
 | 30 | Перезапустить API и worker | Selection, dataset/run и хеши трёх полных CSV не изменяются | Тот же HTTP-тест: оба процесса остановлены и запущены с прежним отдельным state — пройдено |
-| 31 | Проверить официальный bundle независимым CLI | Все входные данные, роли и результаты согласованы | `validate.py --data data --out outputs` — passed, warnings=[] |
+| 31 | Проверить официальный bundle независимым CLI | Все входные данные, роли и результаты согласованы | `backend/validate.py --data data --out outputs` — passed, warnings=[] |
 
 ## Факты сквозного HTTP-теста
 
@@ -79,7 +79,7 @@ $env:PYTHONUTF8 = '1'
 # Весь набор, включая аналитические и существующие UI-тесты:
 .\.venv\Scripts\python.exe -m pytest -q
 # Независимая проверка сохранённого результата:
-.\.venv\Scripts\python.exe validate.py --data data --out outputs
+.\.venv\Scripts\python.exe -m backend.validate --data data --out outputs
 ```
 
 Для официальных сценариев нужны три исходных Parquet в `data/` и корректный

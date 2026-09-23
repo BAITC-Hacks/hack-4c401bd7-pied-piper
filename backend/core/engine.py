@@ -5,7 +5,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-from src.contracts import PRIORITY_WEIGHTS, RANDOM_SEED, ROLES, SUBSTANTIVE_ROLES
+from backend.core.contracts import PRIORITY_WEIGHTS, RANDOM_SEED, ROLES, SUBSTANTIVE_ROLES
 
 
 SCALE_FIELDS = (

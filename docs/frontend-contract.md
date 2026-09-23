@@ -4,10 +4,10 @@
 
 **Статус: backend API реализован; новый frontend не реализован.**
 Запуск и границы профиля: [backend.md](backend.md). Документ фиксирует поведение API
-и целевое поведение frontend хакатонной версии. Существующие `app.py`
+и целевое поведение frontend хакатонной версии. Существующие `frontend/app.py`
 (Streamlit), pipeline и CSV продолжают работать по текущему протоколу.
 Типы запросов и ответов: [frontend-api.types.ts](frontend-api.types.ts).
-Версия API не заменяет `SCHEMA_VERSION` файлового bundle из `src/contracts.py`.
+Версия API не заменяет `SCHEMA_VERSION` файлового bundle из `backend/core/contracts.py`.
 
 ## 1. Цель и границы
 
@@ -253,6 +253,8 @@ gid,role,role_score,cluster_id,priority_score,evidence в порядке выб�
 bundle, без фильтрации и изменения схемы. Их нельзя заменять выбранным перечнем.
 Ответы: `Content-Type: text/csv; charset=utf-8`, `Content-Disposition: attachment`
 с безопасным именем файла; финансовые числа без локализованных разделителей.
+Скачиваемые CSV имеют UTF-8 BOM для распознавания кодировки в Excel. BOM добавляется
+при скачивании через API и Streamlit; файлы bundle и их SHA256 не меняются.
 В теле не JSON. При ошибке endpoint возвращает стандартный JSON ошибки;
 frontend проверяет HTTP status перед сохранением Blob.
 

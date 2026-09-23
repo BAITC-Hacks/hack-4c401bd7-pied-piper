@@ -42,13 +42,13 @@ setup: $(PYTHON)
 	uv pip sync --python "$(PYTHON)" requirements.lock
 
 pipeline:
-	"$(PYTHON)" pipeline.py --data "$(DATA)" --out "$(OUTPUTS)"
+	"$(PYTHON)" -m backend.pipeline --data "$(DATA)" --out "$(OUTPUTS)"
 
 validate:
-	"$(PYTHON)" validate.py --data "$(DATA)" --out "$(OUTPUTS)"
+	"$(PYTHON)" -m backend.validate --data "$(DATA)" --out "$(OUTPUTS)"
 
 ui:
-	"$(PYTHON)" -m streamlit run app.py --server.address 127.0.0.1 --server.port $(PORT) -- --outputs "$(OUTPUTS)"
+	"$(PYTHON)" -m streamlit run frontend/app.py --server.address 127.0.0.1 --server.port $(PORT) -- --outputs "$(OUTPUTS)"
 
 stop:
 	"$(PYTHON)" scripts/stop_ui.py --port $(PORT)
@@ -63,7 +63,7 @@ test:
 
 demo:
 	"$(PYTHON)" tests/fixtures/ui/make_fixture.py --out demo_outputs --data demo_data
-	"$(PYTHON)" validate.py --data demo_data --out demo_outputs --expected-nodes 24
+	"$(PYTHON)" -m backend.validate --data demo_data --out demo_outputs --expected-nodes 24
 	$(MAKE) ui OUTPUTS=demo_outputs
 
 docker-build:

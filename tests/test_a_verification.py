@@ -5,11 +5,11 @@ import pytest
 from subprocess import CompletedProcess
 from types import SimpleNamespace
 
-from src.data import load_data
-from src.engine import build_features, normalize, score_roles
-from src.contracts import PRIORITY_WEIGHTS
-from pipeline import run_pipeline
-from src.view import load_bundle
+from backend.core.data import load_data
+from backend.core.engine import build_features, normalize, score_roles
+from backend.core.contracts import PRIORITY_WEIGHTS
+from backend.pipeline import run_pipeline
+from frontend.view import load_bundle
 
 
 BASE_ID = 10000000000000001
@@ -203,7 +203,7 @@ def test_failed_candidate_does_not_replace_current(tmp_path, monkeypatch):
     out = tmp_path / "outputs"
     previous = run_pipeline(data, out, expected_nodes=len(nodes))
     before = (out / "current.json").read_bytes()
-    monkeypatch.setattr("pipeline.subprocess.run", lambda *args, **kwargs: CompletedProcess(
+    monkeypatch.setattr("backend.pipeline.subprocess.run", lambda *args, **kwargs: CompletedProcess(
         args, 1, "", "forced validator failure"
     ))
 
@@ -237,7 +237,7 @@ def test_publication_runtime_limit_is_strict_and_preserves_previous_run(
     files_before = {path.name: path.read_bytes() for path in previous.iterdir()}
     # Replace only pipeline's clock, not the time module used by subprocess.
     ticks = iter([0, 1, 2, 3, 4, 5, 6, total_seconds])
-    monkeypatch.setattr("pipeline.time", SimpleNamespace(monotonic=lambda: next(ticks)))
+    monkeypatch.setattr("backend.pipeline.time", SimpleNamespace(monotonic=lambda: next(ticks)))
     if total_seconds < 300:
         published = run_pipeline(data, out, expected_nodes=len(nodes))
         assert published != previous

@@ -2,11 +2,8 @@
 **
 !Dockerfile
 !requirements.lock
-!app.py
-!pipeline.py
-!validate.py
-!src/
-!src/**
+!frontend/
+!frontend/**
 !backend/
 !backend/**
 !tests/
@@ -18,3 +15,4 @@
 !.streamlit/config.toml
 **/__pycache__/
 **/*.pyc
+!scripts/smoke_backend.py

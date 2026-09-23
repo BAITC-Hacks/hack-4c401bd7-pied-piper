@@ -9,9 +9,9 @@ from uuid import uuid4
 import pandas as pd
 import pytest
 
-from src.bundle_io import resolve_run
-from src.view import load_bundle
-from validate import ValidationError
+from backend.core.bundle_io import resolve_run
+from frontend.view import load_bundle
+from backend.validate import ValidationError
 
 
 def write_manifest(run, change):
@@ -105,7 +105,7 @@ def test_candidate_cli_before_publication(sample):
     (staging/'run.json').unlink()
     (staging/'candidate.json').write_text(json.dumps(candidate))
     before={p.name:p.read_bytes() for p in staging.iterdir()}
-    cmd=[sys.executable,'validate.py','--data',str(data),'--out',str(staging),'--candidate','--expected-nodes','24']
+    cmd=[sys.executable,'-m','backend.validate','--data',str(data),'--out',str(staging),'--candidate','--expected-nodes','24']
     result=subprocess.run(cmd,capture_output=True,text=True)
     assert result.returncode==0,result.stderr
     assert json.loads(result.stdout)=={'status':'passed','validator_version':'1.0.0'}
@@ -126,6 +126,6 @@ def test_candidate_cannot_accept_publication_root(sample):
 
 def test_cli_published_root(sample):
     run,data,_=sample
-    result=subprocess.run([sys.executable,'validate.py','--data',str(data),'--out',str(run.parent.parent),'--expected-nodes','24'],capture_output=True,text=True)
+    result=subprocess.run([sys.executable,'-m','backend.validate','--data',str(data),'--out',str(run.parent.parent),'--expected-nodes','24'],capture_output=True,text=True)
     assert result.returncode==0,result.stderr
     assert json.loads(result.stdout)['status']=='passed'

@@ -6,8 +6,8 @@ import sys
 import pandas as pd
 import pytest
 
-from src.view import load_bundle, make_graph, select_ego, ego_figure, overview_figure
-from validate import ValidationError
+from frontend.view import load_bundle, make_graph, select_ego, ego_figure, overview_figure
+from backend.validate import ValidationError
 
 
 def rewrite_csv(directory, name, change):
@@ -116,7 +116,7 @@ def test_directed_ego_includes_isolate_and_hops(sample):
 
 def test_cli_success_and_real_count_gate(sample):
     out, data, _ = sample
-    args = [sys.executable, 'validate.py', '--data', str(data), '--out', str(out), '--bundle']
+    args = [sys.executable, '-m', 'backend.validate', '--data', str(data), '--out', str(out), '--bundle']
     result = subprocess.run(args+['--expected-nodes', '24'], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout)['bundle'] == 'ok'

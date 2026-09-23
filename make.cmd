@@ -83,15 +83,15 @@ docker compose run --rm tests
 exit /b %errorlevel%
 
 :pipeline
-"%PYTHON%" pipeline.py --data "%DATA%" --out "%OUTPUTS%"
+"%PYTHON%" -m backend.pipeline --data "%DATA%" --out "%OUTPUTS%"
 exit /b %errorlevel%
 
 :validate
-"%PYTHON%" validate.py --data "%DATA%" --out "%OUTPUTS%"
+"%PYTHON%" -m backend.validate --data "%DATA%" --out "%OUTPUTS%"
 exit /b %errorlevel%
 
 :ui
-"%PYTHON%" -m streamlit run app.py --server.address 127.0.0.1 --server.port %PORT% -- --outputs "%OUTPUTS%"
+"%PYTHON%" -m streamlit run frontend/app.py --server.address 127.0.0.1 --server.port %PORT% -- --outputs "%OUTPUTS%"
 exit /b %errorlevel%
 
 :stop
@@ -113,7 +113,7 @@ exit /b %errorlevel%
 :demo
 "%PYTHON%" tests/fixtures/ui/make_fixture.py --out demo_outputs --data demo_data
 if errorlevel 1 exit /b 1
-"%PYTHON%" validate.py --data demo_data --out demo_outputs --expected-nodes 24
+"%PYTHON%" -m backend.validate --data demo_data --out demo_outputs --expected-nodes 24
 if errorlevel 1 exit /b 1
 set "OUTPUTS=demo_outputs"
 call "%~f0" ui

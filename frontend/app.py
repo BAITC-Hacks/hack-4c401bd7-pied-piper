@@ -9,17 +9,18 @@ import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 
-from src.view import FILES, LABELS, load_bundle, make_graph, select_ego
-from src.graph_ui import ego_html, overview_html
-from src.presentation import ROLE_GUIDANCE, priority_parts, priority_explanation
-from validate import ValidationError
-from src.bundle_io import resolve_run
+from frontend.view import FILES, LABELS, load_bundle, make_graph, select_ego
+from frontend.graph_ui import ego_html, overview_html
+from frontend.presentation import ROLE_GUIDANCE, priority_parts, priority_explanation
+from backend.validate import ValidationError
+from backend.core.bundle_io import resolve_run
+from backend.core.csv_export import csv_download_bytes
 
 st.set_page_config(page_title='Money Graph · Очередь проверки', page_icon='◈', layout='wide')
 # Keep Streamlit tools (including Clear cache); hide only the deployment shortcut.
 st.html('<style>[data-testid="stAppDeployButton"] { display: none; }</style>')
 # Cached HTML must change when its renderer/template changes, even for the same run.
-GRAPH_REVISION = sha256(b''.join((Path(__file__).parent / 'src' / name).read_bytes()
+GRAPH_REVISION = sha256(b''.join((Path(__file__).parent / name).read_bytes()
                                 for name in ('graph_ui.py', 'graph.html'))).hexdigest()
 
 
@@ -37,7 +38,7 @@ def cached_ego(nodes, edges, gid, hops, color_by, limit, graph_revision):
 
 @st.cache_data(show_spinner=False)
 def cached_overview(nodes, edges, clusters, visible, graph_revision):
-    from src.view import Bundle
+    from frontend.view import Bundle
     return overview_html(Bundle(nodes, edges, clusters, pd.DataFrame(), {}, {}, {}), visible)
 
 
@@ -132,7 +133,7 @@ def main():
     except (OSError, ValidationError) as exc:
         st.info('Нет завершённого расчёта для просмотра.')
         st.error(str(exc))
-        st.code('python pipeline.py --data data --out outputs', language='bash')
+        st.code('python -m backend.pipeline --data data --out outputs', language='bash')
         st.caption('После расчёта обновите страницу. Для тестового примера используйте tests/fixtures/ui/make_fixture.py и отдельный demo_outputs.')
         return
     nodes = bundle.nodes
@@ -231,7 +232,7 @@ def main():
         st.caption('Выгрузки содержат полный результат текущего расчёта; фильтры экрана их не изменяют.')
         cols = st.columns(3)
         for col, filename, label in zip(cols, ['top_nodes.csv', 'nodes_roles.csv', 'clusters.csv'], ['Скачать top_nodes.csv', 'Скачать все роли', 'Скачать clusters.csv']):
-            col.download_button(label, bundle.raw[filename], filename, 'text/csv')
+            col.download_button(label, csv_download_bytes(bundle.raw[filename]), filename, 'text/csv; charset=utf-8')
         st.success('SHA256 всех пяти файлов проверены. CSV и метрики согласованы со связями.')
         for warning in bundle.report['warnings']:
             st.warning(warning)

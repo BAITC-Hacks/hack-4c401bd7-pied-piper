@@ -14,9 +14,9 @@ import sys
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from src.contracts import MAX_EVIDENCE_LENGTH, PRIORITY_WEIGHTS
-from src.view import load_bundle
-from validate import check_inputs
+from backend.core.contracts import MAX_EVIDENCE_LENGTH, PRIORITY_WEIGHTS
+from frontend.view import load_bundle
+from backend.validate import check_inputs
 
 
 def audit(data: Path, out: Path, expected_nodes: int = 2248) -> dict:

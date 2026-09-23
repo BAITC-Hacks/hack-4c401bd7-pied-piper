@@ -1,6 +1,6 @@
 # UI и validator — команды и контракт v1.0.0
 
-Источник схем — [src/contracts.py](src/contracts.py). Состояние продукта и основная установка описаны в [README](README.md). Эта инструкция относится к существующему Streamlit UI; отдельные [HTTP API и worker](docs/backend.md) уже реализованы, но Streamlit к ним не подключён. Новый frontend пока не реализован.
+Источник схем — [backend/core/contracts.py](../backend/core/contracts.py). Состояние продукта и основная установка описаны в [README](../README.md). Эта инструкция относится к существующему Streamlit UI; отдельные [HTTP API и worker](backend.md) уже реализованы, но Streamlit к ним не подключён. Новый frontend пока не реализован.
 
 ## Запуск на Windows
 
@@ -48,7 +48,7 @@ Manifest фиксирует status=complete, validation.status=passed, верс�
 2. Вызывает validator:
 
 ```powershell
-.\.venv\Scripts\python.exe validate.py --data data --out outputs/.staging/<UUID> --candidate
+.\.venv\Scripts\python.exe -m backend.validate --data data --out outputs/.staging/<UUID> --candidate
 ```
 
 В реальной команде заменить `<UUID>` идентификатором каталога. Linux/macOS: `.venv/bin/python`.
@@ -90,4 +90,4 @@ uv pip install --python .venv/Scripts/python.exe playwright
 .\.venv\Scripts\python.exe tests/browser_graph.py --url http://127.0.0.1:3000 --outputs outputs
 ```
 
-Последний скрипт сохраняет скриншоты в `/tmp/`; требуется существующий доступный каталог, поэтому на Windows для проверки графа можно использовать Linux/Docker-окружение либо ручной QA. Исторические браузерные результаты не означают новый прогон: см. [QA-документы](docs/README.md).
+Последний скрипт сохраняет скриншоты в `/tmp/`; требуется существующий доступный каталог, поэтому на Windows для проверки графа можно использовать Linux/Docker-окружение либо ручной QA. Исторические браузерные результаты не означают новый прогон: см. [QA-документы](README.md).

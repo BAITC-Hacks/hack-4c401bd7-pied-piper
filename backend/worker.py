@@ -12,8 +12,8 @@ from backend.config import Settings
 from backend.datasets import safe_validation_detail, validate_dataset
 from backend.errors import error_body
 from backend.store import Store, now, timestamp
-from pipeline import run_pipeline
-from src.results import load_bundle
+from backend.pipeline import run_pipeline
+from backend.core.results import load_bundle
 
 LOG = logging.getLogger(__name__)
 

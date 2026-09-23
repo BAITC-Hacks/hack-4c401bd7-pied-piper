@@ -3,8 +3,8 @@ import re
 
 import networkx as nx
 
-from src.graph_ui import ego_html, graph_html, overview_html
-from src.view import load_bundle, make_graph, select_ego
+from frontend.graph_ui import ego_html, graph_html, overview_html
+from frontend.view import load_bundle, make_graph, select_ego
 
 
 def payload(html):
@@ -38,7 +38,7 @@ def test_graph_labels_cannot_break_out_of_script():
 
 
 def test_disconnected_components_surround_main_network():
-    from src.graph_ui import component_positions
+    from frontend.graph_ui import component_positions
     import math
     graph = nx.DiGraph()
     graph.add_edges_from((str(i), str(i+1)) for i in range(12))

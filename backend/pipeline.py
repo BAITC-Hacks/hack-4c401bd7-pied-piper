@@ -12,13 +12,13 @@ import time
 from uuid import uuid4
 from contextlib import nullcontext
 
-from src.contracts import (
+from backend.core.contracts import (
     CSV_OPTIONS, INPUT_SCHEMAS, OUTPUT_SCHEMAS, PRIORITY_WEIGHTS,
     RANDOM_SEED, ROLES, SCHEMA_VERSION,
 )
-from src.data import load_data
-from src.engine import build_features, score_roles
-from src.reporting import make_outputs
+from backend.core.data import load_data
+from backend.core.engine import build_features, score_roles
+from backend.core.reporting import make_outputs
 
 
 def _hash(path: Path) -> str:
@@ -34,7 +34,7 @@ def run_pipeline(data: Path, out: Path, expected_nodes: int = 2248, *,
                  run_id: str | None = None, on_stage=None, publication_guard=None) -> Path:
     """Publish a run only after its staging candidate passes validate.py."""
     start = time.monotonic()
-    from src.bundle_io import uuid_text
+    from backend.core.bundle_io import uuid_text
     run_id = uuid_text(run_id) if run_id is not None else str(uuid4())
     stage = on_stage or (lambda name: None)
     data, out = Path(data), Path(out)
@@ -94,13 +94,14 @@ def run_pipeline(data: Path, out: Path, expected_nodes: int = 2248, *,
         manifest["data_kind"] = "synthetic"
     _write_json(candidate / "candidate.json", manifest)
     command = [
-        sys.executable, "-X", "utf8", str(Path(__file__).with_name("validate.py")),
+        sys.executable, "-X", "utf8", "-m", "backend.validate",
         "--data", str(data.resolve()), "--out", str(candidate.resolve()),
         "--candidate", "--expected-nodes", str(expected_nodes),
     ]
     validation_start = time.monotonic()
     stage("validation")
-    result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", timeout=300)
+    result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", timeout=300,
+                            cwd=Path(__file__).resolve().parents[1])
     stages["validation"] = time.monotonic() - validation_start
     stages["total"] = time.monotonic() - start
     if result.returncode:

@@ -7,9 +7,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.contracts import MAX_EVIDENCE_LENGTH, SUBSTANTIVE_ROLES
-from src.engine import build_features, score_roles
-from src.reporting import make_outputs
+from backend.core.contracts import MAX_EVIDENCE_LENGTH, SUBSTANTIVE_ROLES
+from backend.core.engine import build_features, score_roles
+from backend.core.reporting import make_outputs
 
 
 def feature_table(*overrides):

@@ -4,7 +4,7 @@ from io import BytesIO
 from pathlib import Path
 import numpy as np
 import pandas as pd
-from validate import SCHEMAS, ValidationError, ids, read_csv, require, validate_frames
+from backend.validate import SCHEMAS, ValidationError, ids, read_csv, require, validate_frames
 
 @dataclass
 class Bundle:
@@ -18,9 +18,9 @@ class Bundle:
 
 
 def load_bundle(directory: Path, candidate=False) -> Bundle:
-    from src.bundle_io import read_bundle_files
-    from src.contracts import OUTPUT_SCHEMAS
-    from validate import check_schema, check_metrics, SCORE_ATOL
+    from backend.core.bundle_io import read_bundle_files
+    from backend.core.contracts import OUTPUT_SCHEMAS
+    from backend.validate import check_schema, check_metrics, SCORE_ATOL
     try:
         _, manifest, raw = read_bundle_files(directory, candidate=candidate)
         frames = [read_csv(BytesIO(raw[name]), name) for name in SCHEMAS]

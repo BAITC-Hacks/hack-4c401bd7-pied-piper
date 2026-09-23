@@ -5,8 +5,8 @@ import pandas as pd
 
 from backend import models
 from backend.errors import ApiProblem
-from src.contracts import PRIORITY_WEIGHTS, SUBSTANTIVE_ROLES
-from src.results import load_bundle
+from backend.core.contracts import PRIORITY_WEIGHTS, SUBSTANTIVE_ROLES
+from backend.core.results import load_bundle
 
 
 def clean(value):

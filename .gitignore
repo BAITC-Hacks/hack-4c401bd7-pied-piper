@@ -3,15 +3,11 @@ __pycache__/
 .pytest_cache/
 data/*
 !data/README.md
-!data/nodes.parquet
-!data/edges.parquet
-!data/transactions.parquet
-outputs/*
-!outputs/current.json
-!outputs/runs/
-# Keep the already tracked submission bundle; ignore new local runs.
-outputs/runs/*
+outputs/
 demo_data/
 demo_outputs/
 *.log
 runtime/
+.env
+.env.*
+!.env.example

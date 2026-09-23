@@ -4,9 +4,9 @@ from datetime import date
 import pandas as pd
 import pytest
 
-from pipeline import run_pipeline
+from backend.pipeline import run_pipeline
 from scripts import audit_evidence
-from src.view import load_bundle
+from frontend.view import load_bundle
 
 
 @pytest.fixture

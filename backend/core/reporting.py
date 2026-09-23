@@ -1,7 +1,7 @@
 """Contract-shaped, factual exports for the reviewed graph."""
 import pandas as pd
 
-from src.contracts import (
+from backend.core.contracts import (
     CLUSTERS_SCHEMA, NODE_METRICS_SCHEMA, NODES_ROLES_SCHEMA,
     PRIORITY_WEIGHTS, TOP_NODES_SCHEMA, column_names,
 )

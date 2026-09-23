@@ -22,7 +22,8 @@ from backend.config import Settings
 from backend.datasets import bootstrap, dataset_document, hashes
 from backend.errors import ApiProblem, detail, error_body
 from backend.store import Store, timestamp
-from src.contracts import CSV_OPTIONS, NODES_ROLES_SCHEMA, column_names
+from backend.core.contracts import CSV_OPTIONS, NODES_ROLES_SCHEMA, column_names
+from backend.core.csv_export import csv_download_bytes
 
 LOG = logging.getLogger(__name__)
 UPLOAD_SCHEMA = {
@@ -278,7 +279,7 @@ def create_app(settings: Settings | None = None):
         return store.put_selection(run_id, gids)
 
     def csv_response(raw, filename):
-        return Response(raw, media_type='text/csv; charset=utf-8',
+        return Response(csv_download_bytes(raw), media_type='text/csv; charset=utf-8',
                         headers={'Content-Disposition': f'attachment; filename="{filename}"'})
 
     @app.get(prefix + '/runs/{run_id}/selection/export', response_class=Response,

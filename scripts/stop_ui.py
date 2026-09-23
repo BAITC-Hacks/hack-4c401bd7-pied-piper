@@ -28,7 +28,7 @@ def linux_stop(port):
             if (entry / 'cwd').resolve() != ROOT:
                 continue
             args = (entry / 'cmdline').read_bytes().decode().rstrip('\0').split('\0')
-            if not any(args[i:i + 3] == ['streamlit', 'run', 'app.py'] for i in range(len(args))):
+            if not any(args[i:i + 3] == ['streamlit', 'run', 'frontend/app.py'] for i in range(len(args))):
                 continue
             if ui_port(args) != str(port):
                 continue

@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 from streamlit.testing.v1 import AppTest
 
-APP = str(Path(__file__).resolve().parents[1]/'app.py')
+APP = str(Path(__file__).resolve().parents[1]/'frontend/app.py')
 
 
 def test_ui_empty_outputs(tmp_path, monkeypatch):

@@ -35,3 +35,21 @@ def test_graph_labels_cannot_break_out_of_script():
     html = graph_html(graph, {'9007199254741001': {'label': hostile}})
     assert hostile not in html
     assert payload(html)['nodes'][0]['description'] == hostile
+
+
+def test_disconnected_components_surround_main_network():
+    from src.graph_ui import component_positions
+    import math
+    graph = nx.DiGraph()
+    graph.add_edges_from((str(i), str(i+1)) for i in range(12))
+    isolates = [str(100+i) for i in range(19)]
+    graph.add_nodes_from(isolates)
+    positions = component_positions(graph)
+    quadrants = {(positions[n][0] > 0, positions[n][1] > 0) for n in isolates}
+    assert len(quadrants) == 4  # No distant row of disconnected nodes.
+    for i, node in enumerate(isolates):
+        assert all(math.dist(positions[node], positions[other]) >= 70 for other in isolates[i+1:])
+    xs, ys = zip(*positions.values())
+    aspect = (max(xs)-min(xs))/(max(ys)-min(ys))
+    assert .6 < aspect < 1.7
+    assert positions == component_positions(graph)

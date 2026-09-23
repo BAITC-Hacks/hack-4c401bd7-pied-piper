@@ -10,26 +10,41 @@ from src.view import COLORS, LABELS, overview_graph
 PALETTE = ['#679eff', '#f7b955', '#49c9bd', '#ce8ff0', '#ff7f8a', '#96a7be', '#c2d66b']
 
 
-def graph_html(graph, attributes, color_by='role', selected=None):
-    # Lay out each component separately, retaining isolates and avoiding coincident centres.
-    positions = {}
+def component_positions(graph):
+    """Pack disconnected components in concentric rings, largest at the centre."""
+    positions, placed = {}, []
     components = sorted(nx.connected_components(graph.to_undirected()),
                         key=lambda c: (-len(c), min(map(str, c))))
-    offset_x = offset_y = row_height = 0
-    shelf_width = max(900, math.sqrt(max(1, len(graph))) * 150)
-    for component in components:
+    for index, component in enumerate(components):
         sub = graph.subgraph(sorted(component))
         layout = nx.spring_layout(sub, seed=42, weight=None, iterations=100, k=.8)
-        scale = math.sqrt(len(sub)) * 65 if len(sub) > 1 else 0
-        width = scale * 2 + 100
-        if offset_x and offset_x + width > shelf_width:
-            offset_x = 0
-            offset_y += row_height
-            row_height = 0
+        scale = math.sqrt(len(sub)) * 34 if len(sub) > 1 else 0
+        radius = max((math.hypot(float(p[0]), float(p[1])) * scale for p in layout.values()), default=0) + 28
+        if not placed:
+            cx = cy = 0.0
+        else:
+            # Search the nearest ring with room; golden-angle starts spread small islands.
+            ring = placed[0][2] + radius + 22
+            while True:
+                found = None
+                for step in range(180):
+                    angle = index * 2.399963229728653 + step * math.tau / 180
+                    cx, cy = ring * math.cos(angle), ring * math.sin(angle)
+                    if all(math.hypot(cx - x, cy - y) >= radius + r + 18 for x, y, r in placed):
+                        found = (cx, cy)
+                        break
+                if found:
+                    cx, cy = found
+                    break
+                ring += 22
+        placed.append((cx, cy, radius))
         for node, pos in layout.items():
-            positions[node] = [float(pos[0] * scale + offset_x + scale), float(pos[1] * scale + offset_y + scale)]
-        offset_x += width
-        row_height = max(row_height, width)
+            positions[node] = [float(pos[0] * scale + cx), float(pos[1] * scale + cy)]
+    return positions
+
+
+def graph_html(graph, attributes, color_by='role', selected=None):
+    positions = component_positions(graph)
     edges = sorted(graph.edges(data=True), key=lambda e: (-e[2].get('sum_kzt', 0), str(e[0]), str(e[1])))[:350]
     nodes = []
     for node in graph:

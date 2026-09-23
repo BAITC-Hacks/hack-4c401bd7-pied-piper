@@ -28,7 +28,7 @@ def main():
         search.fill(gid)
         search.press('Enter')
         expect(page.get_by_role('heading', name=f'Клиент {gid}', exact=True)).to_be_visible(timeout=30000)
-        frame = page.get_by_role('tabpanel', name='Разбор клиента', exact=True).frame_locator('iframe')
+        frame = page.frame_locator('iframe')
         node = frame.locator(f'.node[data-id="{gid}"]')
         expect(node).to_be_visible()
         data = json.loads(frame.locator('#graph-data').text_content())
@@ -38,6 +38,7 @@ def main():
         initial = node.get_attribute('transform')
         edge = frame.locator(f'.edge[data-source="{gid}"], .edge[data-target="{gid}"]').first
         before_edge = edge.get_attribute('d')
+        node.locator('circle').scroll_into_view_if_needed()
         box = node.locator('circle').bounding_box()
         page.mouse.move(box['x'] + box['width']/2, box['y'] + box['height']/2)
         page.mouse.down()
@@ -59,10 +60,16 @@ def main():
         frame.get_by_label('Подписи', exact=True).check()
         assert frame.locator('.node text').evaluate_all('(labels)=>labels.every(e=>e.style.display!=="none")')
         page.screenshot(path='/tmp/money-graph-interactive.jpg', full_page=True)
-        page.get_by_role('tab', name='Обзор сети', exact=True).click()
-        overview = page.get_by_role('tabpanel', name='Обзор сети', exact=True).frame_locator('iframe')
+        page.get_by_text('Сеть и сообщества', exact=True).click()
+        expect(page.get_by_role('heading', name='Как устроена сеть', exact=True)).to_be_visible()
+        overview = page.frame_locator('iframe')
         expect(overview.locator('.node').first).to_be_visible()
-        assert overview.locator('.node').count() == min(100, len(bundle.clusters))
+        expect(overview.locator('.node')).to_have_count(min(100, len(bundle.clusters)))
+        overview_data = json.loads(overview.locator('#graph-data').text_content())
+        xs = [node['x'] for node in overview_data['nodes']]
+        ys = [node['y'] for node in overview_data['nodes']]
+        assert .4 < (max(xs)-min(xs))/max(1, max(ys)-min(ys)) < 2.5, 'Overview became a distant row again'
+        page.screenshot(path='/tmp/money-graph-overview.jpg', full_page=True)
         assert not errors, errors
         assert not external, external
         print('PASS: real graph drag, edge tracking, zoom, reset, layouts, labels, focus, overview; no JS errors or external requests')

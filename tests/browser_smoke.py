@@ -45,14 +45,14 @@ def main():
             search.fill(gid)
             search.press('Enter')
             expect(page.get_by_role('heading', name=f'Клиент {gid}', exact=True)).to_be_visible(timeout=15000)
-            card = page.get_by_role('tabpanel', name='Разбор клиента', exact=True)
+            card = page
             expect(card.get_by_text(row.evidence, exact=True)).to_be_visible()
             expect(card.locator('strong').filter(has_text=LABELS[row.role])).to_be_visible()
             for label, value in (
-                ('Уверенность в роли', f'{row.role_score:.3f}'),
-                ('Приоритет проверки', f'{row.priority_score:.3f}'),
-                ('Входящий поток', f'{row.in_kzt:,.0f} KZT'),
-                ('Исходящий поток', f'{row.out_kzt:,.0f} KZT'),
+                ('Поддержка роли', f'{row.role_score:.3f}'),
+                ('Приоритет проверки', f'{row.priority_score * 100:.1f} / 100'),
+                ('Входящий поток', f'{row.in_kzt:,.2f} KZT'.replace(',', ' ')),
+                ('Исходящий поток', f'{row.out_kzt:,.2f} KZT'.replace(',', ' ')),
             ):
                 metric = card.get_by_test_id('stMetric').filter(has=page.get_by_text(label, exact=True))
                 expect(metric.get_by_test_id('stMetricValue')).to_have_text(value)
@@ -72,12 +72,12 @@ def main():
         expect(page.get_by_role('heading', name=f'Клиент {bundle.top.iloc[0].gid}', exact=True)).to_be_visible()
         args.screenshot.parent.mkdir(parents=True, exist_ok=True)
         page.screenshot(path=str(args.screenshot), full_page=True, type='jpeg', quality=70)
-        for tab, label, filename in (
-            ('Приоритет проверки', 'Скачать top_nodes.csv', 'top_nodes.csv'),
-            ('Приоритет проверки', 'Скачать все роли', 'nodes_roles.csv'),
-            ('Кластеры', 'Скачать clusters.csv', 'clusters.csv'),
+        page.get_by_text('Скачать результаты и проверить данные', exact=True).click()
+        for label, filename in (
+            ('Скачать top_nodes.csv', 'top_nodes.csv'),
+            ('Скачать все роли', 'nodes_roles.csv'),
+            ('Скачать clusters.csv', 'clusters.csv'),
         ):
-            page.get_by_role('tab', name=tab, exact=True).click()
             with page.expect_download() as pending:
                 page.get_by_role('button', name=label, exact=True).click()
             download = pending.value

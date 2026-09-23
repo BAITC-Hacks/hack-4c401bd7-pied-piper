@@ -8,8 +8,21 @@ from src.contracts import (
 
 
 def _evidence(row) -> str:
-    facts = (f"Вход: {row.in_deg} контр., {row.in_kzt:.0f} KZT; "
-             f"выход: {row.out_deg} контр., {row.out_kzt:.0f} KZT.")
+    facts = {
+        "consolidator": (f"Вход от {row.in_deg} контр.: {row.in_kzt:.2f} KZT; "
+                         f"выход {row.out_kzt:.2f} KZT."),
+        "distributor": (f"Выход {row.out_deg} контр.: {row.out_kzt:.2f} KZT; "
+                        f"вход {row.in_kzt:.2f} KZT."),
+        "transit": (f"Вход/выход: {row.in_kzt:.2f}/{row.out_kzt:.2f} KZT; "
+                    f"отношение ≈{row.pass_through:.2f}."),
+        "terminal": (f"Вход {row.in_kzt:.2f} KZT от {row.in_deg} контр.; "
+                     f"наблюдаемых исходящих связей {row.out_deg}."),
+        "coordinator": (f"Прибл. посредничество {row.betweenness:.5f}; "
+                        f"внешних соседей {row.cross_cluster_degree}; "
+                        f"вход/выход {row.in_deg}/{row.out_deg} контр."),
+        "peripheral": (f"Вход/выход {row.in_deg}/{row.out_deg} контр.; "
+                       f"потоки {row.in_kzt:.2f}/{row.out_kzt:.2f} KZT."),
+    }[row.role]
     if row.at_boundary:
         caveat = " Depth=4: продолжение неизвестно."
     elif row.is_seed:

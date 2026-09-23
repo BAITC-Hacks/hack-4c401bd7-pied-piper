@@ -11,6 +11,7 @@
 !tests/**
 !scripts/
 !scripts/ensure_results.py
+!scripts/audit_evidence.py
 !.streamlit/
 !.streamlit/config.toml
 **/__pycache__/

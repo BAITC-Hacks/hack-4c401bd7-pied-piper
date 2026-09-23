@@ -1,7 +1,7 @@
 """Contract v1 shared by A (producer), B (validator/UI), and P (acceptance).
 
 Declarative schemas only: this module does not calculate scores or validate data.
-Types name storage types, not pandas inference. See PLAN.md section 7.
+Types name storage types, not pandas inference. See docs/methodology.md.
 """
 from dataclasses import dataclass
 from typing import TypedDict

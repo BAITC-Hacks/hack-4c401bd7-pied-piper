@@ -1,0 +1,15 @@
+# Allow only application sources and dependency metadata into the image.
+**
+!Dockerfile
+!requirements.lock
+!app.py
+!pipeline.py
+!validate.py
+!src/
+!src/**
+!tests/
+!tests/**
+!.streamlit/
+!.streamlit/config.toml
+**/__pycache__/
+**/*.pyc

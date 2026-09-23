@@ -1,0 +1,6 @@
+# Published files are hashed as bytes; checkout must not transform them.
+outputs/runs/** -text
+*.parquet -text
+*.sh text eol=lf
+Dockerfile text eol=lf
+compose.yaml text eol=lf

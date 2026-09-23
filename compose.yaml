@@ -1,0 +1,48 @@
+name: money-graph
+
+x-app: &app
+  image: money-graph:local
+  build: .
+  init: true
+
+services:
+  pipeline:
+    <<: *app
+    command: ["python", "pipeline.py", "--data", "/data", "--out", "/results"]
+    volumes:
+      - ./data:/data:ro
+      - results:/results
+    restart: "no"
+
+  ui:
+    <<: *app
+    depends_on:
+      pipeline:
+        condition: service_completed_successfully
+    volumes:
+      - results:/results:ro
+    ports:
+      - "127.0.0.1:8501:8501"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health', timeout=5).read()"]
+      interval: 10s
+      timeout: 6s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  validate:
+    <<: *app
+    profiles: ["tools"]
+    command: ["python", "validate.py", "--data", "/data", "--out", "/results"]
+    volumes:
+      - ./data:/data:ro
+      - results:/results:ro
+
+  tests:
+    <<: *app
+    profiles: ["tools"]
+    command: ["python", "-m", "pytest", "-q"]
+
+volumes:
+  results:

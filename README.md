@@ -46,6 +46,49 @@ outputs/
 
 ## Запуск
 
+### Docker (Windows, Linux, macOS)
+
+Требуется Docker с Compose и Linux-контейнерами (на Windows — Docker Desktop).
+Из корня проекта:
+
+```bash
+docker compose up --build -d
+```
+
+Откройте http://localhost:8501. Сначала `pipeline` рассчитывает и проверяет
+результат, затем запускается `ui`. Python 3.12.12 и зависимости из
+`requirements.lock` устанавливаются внутри образа. Входной каталог `data/`
+подключён только для чтения; данные не включаются в образ.
+
+Результаты хранятся в Docker volume `money-graph_results`, отдельно от
+Windows-каталога `outputs/`. CSV создаются и проверяются в Linux; Git и
+Windows не преобразуют их окончания строк. UI читает этот volume без права
+записи. Проверка SHA256 остаётся обязательной. `.gitattributes` также
+запрещает преобразование опубликованных файлов при последующих Git checkout.
+Уже изменённые окончания строк в старой рабочей копии эта настройка сама
+не восстанавливает; Docker создаёт собственный проверенный результат.
+
+```bash
+docker compose logs pipeline
+docker compose run --rm validate
+docker compose run --rm tests
+```
+
+Повторный расчёт после обновления входных данных:
+
+```bash
+docker compose run --rm pipeline
+```
+
+Затем нажмите «Обновить результаты» в интерфейсе. Для обновления кода
+повторите `docker compose up --build -d`.
+
+Остановка: `docker compose down` (результаты сохраняются). Команда
+`docker compose down -v` удаляет также Docker volume с результатами.
+Порт 8501 доступен только на локальном компьютере.
+
+### Без Docker
+
 Быстрый запуск через GNU Make из корня проекта:
 
 ```bash

@@ -9,6 +9,8 @@ data/*
 outputs/*
 !outputs/current.json
 !outputs/runs/
+# Keep the already tracked submission bundle; ignore new local runs.
+outputs/runs/*
 demo_data/
 demo_outputs/
 *.log

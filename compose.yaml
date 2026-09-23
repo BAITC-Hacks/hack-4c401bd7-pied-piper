@@ -44,7 +44,7 @@ services:
   pipeline:
     <<: *app
     profiles: ["tools"]
-    command: ["python", "pipeline.py", "--data", "/data", "--out", "/results"]
+    command: ["python", "-m", "backend.pipeline", "--data", "/data", "--out", "/results"]
     volumes:
       - ./data:/data:ro
       - results:/results
@@ -81,7 +81,7 @@ services:
   validate:
     <<: *app
     profiles: ["tools"]
-    command: ["python", "validate.py", "--data", "/data", "--out", "/results"]
+    command: ["python", "-m", "backend.validate", "--data", "/data", "--out", "/results"]
     volumes:
       - ./data:/data:ro
       - results:/results:ro

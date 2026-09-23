@@ -8,7 +8,7 @@ from pathlib import Path
 import re
 from uuid import UUID
 
-from src.contracts import (SCHEMA_VERSION, INPUT_SCHEMAS, OUTPUT_SCHEMAS, RunManifest,
+from backend.core.contracts import (SCHEMA_VERSION, INPUT_SCHEMAS, OUTPUT_SCHEMAS, RunManifest,
                            Counts, Thresholds, PRIORITY_WEIGHTS, RANDOM_SEED, ROLES)
 
 

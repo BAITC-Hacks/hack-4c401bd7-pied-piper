@@ -5,7 +5,7 @@ from pathlib import Path
 
 import networkx as nx
 
-from src.view import COLORS, LABELS, overview_graph
+from frontend.view import COLORS, LABELS, overview_graph
 
 PALETTE = ['#679eff', '#f7b955', '#49c9bd', '#ce8ff0', '#ff7f8a', '#96a7be', '#c2d66b']
 

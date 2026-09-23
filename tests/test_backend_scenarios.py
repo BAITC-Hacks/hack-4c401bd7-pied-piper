@@ -10,7 +10,7 @@ import pytest
 
 from backend.models import ApiError
 from backend.worker import Worker
-from src.results import load_bundle
+from backend.core.results import load_bundle
 from test_backend import api, upload_files, url  # Reuse isolated API fixture.
 
 

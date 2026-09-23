@@ -12,8 +12,8 @@ flowchart LR
   HTTP["HTTP /api/v1"] --> DB["SQLite: датасеты, задания, selection"]
   HTTP --> READ["Чтение и проверка bundle"]
   DB --> W["Отдельный worker + heartbeat"]
-  W --> P["pipeline.py: существующая аналитика"]
-  P --> V["validate.py"]
+  W --> P["backend/pipeline.py: существующая аналитика"]
+  P --> V["backend/validate.py"]
   V --> FILES["runtime/results/runs/run_id"]
   READ --> FILES
   W --> DB
@@ -27,21 +27,21 @@ API выделяет run_id и сохраняет задания атомарн�
 
 ```mermaid
 flowchart LR
-  D["data: nodes, edges, transactions"] --> L["src/data.py: проверка входа"]
-  L --> E["src/engine.py: граф, признаки, роли, приоритет"]
-  E --> R["src/reporting.py: CSV и объяснения"]
-  R --> S["pipeline.py: staging/candidate"]
-  S --> V["validate.py"]
+  D["data: nodes, edges, transactions"] --> L["backend/core/data.py: проверка входа"]
+  L --> E["backend/core/engine.py: граф, признаки, роли, приоритет"]
+  E --> R["backend/core/reporting.py: CSV и объяснения"]
+  R --> S["backend/pipeline.py: staging/candidate"]
+  S --> V["backend/validate.py"]
   V --> B["runs/UUID и current.json"]
   B --> IO["bundle_io.py и view.py: чтение и целостность"]
-  IO --> A["app.py: очередь и карточка"]
+  IO --> A["frontend/app.py: очередь и карточка"]
   A --> G["graph_ui.py + graph.html: SVG"]
   A --> P["presentation.py: пояснения и следующий шаг"]
 ```
 
-`src/contracts.py` задаёт общие схемы v1.0.0. UI и validator не вызывают engine. Plotly-представления в `src/view.py` сохранены: модуль и его функции используются в существующих проверках; основной экран использует SVG/JavaScript.
+`backend/core/contracts.py` задаёт общие схемы v1.0.0. UI и validator не вызывают engine. Plotly-представления в `frontend/view.py` сохранены: модуль и его функции используются в существующих проверках; основной экран использует SVG/JavaScript.
 
-Backend и validator читают результаты через `src/results.py`, не зависящий от визуализации. Streamlit сохраняет существующий путь чтения через `src/view.py`.
+Backend и validator читают результаты через `backend/core/results.py`, не зависящий от визуализации. Streamlit сохраняет существующий путь чтения через `frontend/view.py`.
 
 ## Публикация
 
@@ -54,6 +54,8 @@ Backend и validator читают результаты через `src/results.p
 Manifest содержит SHA256 исходных и выходных файлов, версии, counts, веса, нормализацию, пороги, времена и результат проверки. Сам manifest не является подписанным доказательством качества классификации.
 
 ## Интерфейс
+
+Симуляция устойчивости в `backend/core/resilience.py` вызывается из `frontend/app.py` напрямую и использует полный bundle. Она сравнивает исключение фиксированного top-N по приоритету и обороту, считает связность оставшихся узлов и исторические суммы затронутых рёбер. Это read-only эксперимент: роли, CSV, текущий run и состояние API не изменяются.
 
 Главный экран «Проверка клиентов» соединяет очередь, разбор роли, исходный evidence, вклады приоритета и направленные связи. «Сеть и сообщества» показывает структуру сети. Прямые таблицы связей полны, даже если граф усечён.
 

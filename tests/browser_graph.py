@@ -7,7 +7,7 @@ import sys
 from playwright.sync_api import sync_playwright, expect
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from src.view import load_bundle
+from frontend.view import load_bundle
 
 
 def main():

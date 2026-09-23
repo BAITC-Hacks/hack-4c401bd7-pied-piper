@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 from streamlit.testing.v1 import AppTest
 
-APP = str(Path(__file__).resolve().parents[1]/'app.py')
+APP = str(Path(__file__).resolve().parents[1]/'frontend/app.py')
 
 
 def test_ui_empty_outputs(tmp_path, monkeypatch):
@@ -22,6 +22,7 @@ def test_ui_search_filters_isolate_and_boundary(sample, monkeypatch):
     assert not app.exception
     assert app.radio(key='workspace').value == 'Проверка клиентов'
     assert any('Что проверить дальше' in item.value for item in app.markdown)
+    assert any('Почему назначена эта роль' in item.value for item in app.markdown)
     assert any('Граница обхода depth=4' in message.value for message in app.warning)
     links = [item.value for item in app.dataframe if 'Контрагент' in item.value]
     assert len(links) == 2

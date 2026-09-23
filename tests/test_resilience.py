@@ -2,7 +2,7 @@
 import pandas as pd
 import pytest
 
-from src.resilience import compare_removals
+from backend.core.resilience import compare_removals
 
 
 def tables(gids, links, scores):

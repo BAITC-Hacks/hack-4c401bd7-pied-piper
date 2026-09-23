@@ -7,9 +7,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.contracts import MAX_EVIDENCE_LENGTH, SUBSTANTIVE_ROLES
-from src.engine import build_features, score_roles
-from src.reporting import make_outputs
+from backend.core.contracts import MAX_EVIDENCE_LENGTH, SUBSTANTIVE_ROLES
+from backend.core.engine import build_features, score_roles
+from backend.core.reporting import make_outputs
 
 
 def feature_table(*overrides):
@@ -144,3 +144,27 @@ def test_export_ties_use_numeric_gid_and_cluster_sums_count_directed_edges_once(
     # This controlled profile has magnitude=.3 and role_support=.15;
     # seed proximity=.1 and structure=.0875 must not displace them in why.
     assert top.why.str.contains("объём +0.300; поддержка роли +0.150", regex=False).all()
+
+
+def test_evidence_uses_current_population_threshold():
+    from backend.core.explanations import role_gate
+    edges = pd.DataFrame(columns=['src', 'dst', 'sum_kzt'])
+    for degrees, minimum in [([1, 2, 2, 3, 8], 3), ([1, 2, 4, 5, 8], 5)]:
+        scored = score_roles(feature_table(*[
+            {'in_deg': degree, 'is_seed': True, 'depth': 0} for degree in degrees
+        ]))
+        roles, _, _, _ = make_outputs(scored, edges)
+        assert roles.iloc[-1].role == 'consolidator'
+        assert f'Порог входа: ≥{minimum} контр.' in roles.iloc[-1].evidence
+        assert f'8 отправителей ≥ порога {minimum}' in role_gate(
+            scored.iloc[-1], scored.attrs['thresholds'])
+
+
+def test_transit_explanation_distinguishes_ratio_from_balance():
+    from backend.core.explanations import role_gate
+    scored = score_roles(feature_table({'out_kzt': 20000.0}))
+    roles, _, _, _ = make_outputs(scored, pd.DataFrame(columns=['src', 'dst', 'sum_kzt']))
+    assert roles.iloc[0].role == 'transit'
+    assert 'отношение ≈2.00' in roles.iloc[0].evidence
+    assert 'Баланс 0.5 ≥ 0.5.' in roles.iloc[0].evidence
+    assert 'не доказательство быстрого перевода' in role_gate(scored.iloc[0], scored.attrs['thresholds'])

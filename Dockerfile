@@ -13,18 +13,18 @@ FROM python:3.12.12-slim-bookworm AS app
 ENV PATH="/opt/venv/bin:$PATH" PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
 COPY --from=builder /opt/venv /opt/venv
-COPY src/ ./src/
+COPY frontend/ ./frontend/
 COPY backend/ ./backend/
-COPY app.py pipeline.py validate.py ./
 COPY scripts/ensure_results.py ./scripts/ensure_results.py
 COPY .streamlit/config.toml ./.streamlit/config.toml
 EXPOSE 8501
-CMD ["python", "-m", "streamlit", "run", "app.py", "--server.address=0.0.0.0", "--server.port=8501", "--server.headless=true", "--", "--outputs", "/results"]
+CMD ["python", "-m", "streamlit", "run", "frontend/app.py", "--server.address=0.0.0.0", "--server.port=8501", "--server.headless=true", "--", "--outputs", "/results"]
 
 FROM app AS tests
 COPY requirements.lock ./
 RUN --mount=type=cache,target=/root/.cache/pip pip install --no-compile -r requirements.lock
 COPY scripts/audit_evidence.py ./scripts/audit_evidence.py
+COPY scripts/smoke_backend.py ./scripts/smoke_backend.py
 COPY tests/ ./tests/
 CMD ["python", "-m", "pytest", "-q"]
 

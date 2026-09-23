@@ -1,13 +1,15 @@
 """Contract-shaped, factual exports for the reviewed graph."""
 import pandas as pd
 
-from src.contracts import (
+from backend.core.explanations import role_gate
+
+from backend.core.contracts import (
     CLUSTERS_SCHEMA, NODE_METRICS_SCHEMA, NODES_ROLES_SCHEMA,
     PRIORITY_WEIGHTS, TOP_NODES_SCHEMA, column_names,
 )
 
 
-def _evidence(row) -> str:
+def _evidence(row, thresholds) -> str:
     facts = {
         "consolidator": (f"Вход от {row.in_deg} контр.: {row.in_kzt:.2f} KZT; "
                          f"выход {row.out_kzt:.2f} KZT."),
@@ -31,13 +33,13 @@ def _evidence(row) -> str:
         caveat = " Вход не наблюдался; отношение не определено."
     else:
         caveat = " Только наблюдаемые переводы ≥5000 KZT."
-    return facts + caveat
+    return facts + ' ' + role_gate(row, thresholds, compact=True) + caveat
 
 
 def make_outputs(features: pd.DataFrame, edges: pd.DataFrame, top_n: int = 20):
     """Return node roles, clusters, Top and typed node metrics."""
     metrics = features.reset_index().copy()
-    metrics["evidence"] = [_evidence(row) for row in metrics.itertuples(index=False)]
+    metrics["evidence"] = [_evidence(row, features.attrs["thresholds"]) for row in metrics.itertuples(index=False)]
     for field in NODE_METRICS_SCHEMA:
         if field.dtype.startswith("int"):
             metrics[field.name] = metrics[field.name].astype(

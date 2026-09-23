@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
-from validate import SCHEMAS, ValidationError, columns, ids, numeric, read_csv, require, validate_frames
+from backend.validate import SCHEMAS, ValidationError, columns, ids, numeric, read_csv, require, validate_frames
 
 FILES = (*SCHEMAS, 'node_metrics.parquet', 'edges.parquet')
 COLORS = {'consolidator': '#f7b955', 'transit': '#49c9bd', 'distributor': '#679eff',
@@ -31,9 +31,9 @@ class Bundle:
 
 
 def load_bundle(directory: Path, candidate=False) -> Bundle:
-    from src.bundle_io import read_bundle_files
-    from src.contracts import OUTPUT_SCHEMAS
-    from validate import check_schema, check_metrics, SCORE_ATOL
+    from backend.core.bundle_io import read_bundle_files
+    from backend.core.contracts import OUTPUT_SCHEMAS
+    from backend.validate import check_schema, check_metrics, SCORE_ATOL
     try:
         _, manifest, raw = read_bundle_files(directory, candidate=candidate)
         frames = [read_csv(BytesIO(raw[name]), name) for name in SCHEMAS]

@@ -14,5 +14,5 @@ spec.loader.exec_module(module)
 def sample(tmp_path):
     output, data = tmp_path/'outputs', tmp_path/'data'
     gids = module.make_fixture(output, data)
-    from src.bundle_io import resolve_run
+    from backend.core.bundle_io import resolve_run
     return resolve_run(output)[0], data, gids

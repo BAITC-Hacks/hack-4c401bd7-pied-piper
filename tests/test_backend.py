@@ -1,5 +1,6 @@
 """HTTP contracts, durable lifecycle and recovery, independent of frontend."""
 from concurrent.futures import ThreadPoolExecutor
+from codecs import BOM_UTF8
 from dataclasses import replace
 from hashlib import sha256
 from io import BytesIO
@@ -18,7 +19,7 @@ from backend.datasets import dataset_document, hashes
 from backend.errors import ApiProblem
 from backend.store import Store
 from backend.worker import Worker
-from src.results import load_bundle
+from backend.core.results import load_bundle
 
 
 @pytest.fixture
@@ -137,13 +138,15 @@ def test_selection_is_persistent_atomic_and_exports(api):
     with TestClient(create_app(settings)) as other:
         assert other.get(path).json()['gids'] == selected
     exported = client.get(path + '/export')
+    assert exported.content.startswith(BOM_UTF8)
     frame = pd.read_csv(BytesIO(exported.content), dtype={'gid': str})
     assert frame.gid.tolist() == selected
     bundle = load_bundle(store.get('runs', run)['bundle_path'])
     for name in ('nodes_roles.csv', 'clusters.csv', 'top_nodes.csv'):
         response = client.get(url(run, '/exports/' + name))
         assert response.status_code == 200
-        assert response.content == bundle.raw[name]
+        assert response.content.startswith(BOM_UTF8)
+        assert response.content.decode('utf-8-sig') == bundle.raw[name].decode('utf-8-sig')
     assert client.get(url(run, '/exports/run.json')).status_code == 422
     client.put(path, json={'gids': []})
     assert len(pd.read_csv(BytesIO(client.get(path + '/export').content))) == 0
@@ -357,7 +360,7 @@ def test_invalid_ids_and_error_shapes(api):
 
 def test_stage_callback_and_reproducible_results(api):
     _, store, settings, _, dataset, _ = api
-    from pipeline import run_pipeline
+    from backend.pipeline import run_pipeline
     phases = []
     first_id, second_id = str(uuid4()), str(uuid4())
     source = Path(store.get('datasets', dataset)['path'])

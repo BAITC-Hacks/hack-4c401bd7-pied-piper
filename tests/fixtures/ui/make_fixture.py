@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-from src.contracts import OUTPUT_SCHEMAS, INPUT_SCHEMAS, ROLES, SUBSTANTIVE_ROLES, PRIORITY_WEIGHTS
+from backend.core.contracts import OUTPUT_SCHEMAS, INPUT_SCHEMAS, ROLES, SUBSTANTIVE_ROLES, PRIORITY_WEIGHTS
 
 
 def make_fixture(output: Path, data: Path | None = None):

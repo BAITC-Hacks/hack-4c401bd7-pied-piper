@@ -10,9 +10,9 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-from src.contracts import (ROLES, SUBSTANTIVE_ROLES, OUTPUT_SCHEMAS, INPUT_SCHEMAS,
+from backend.core.contracts import (ROLES, SUBSTANTIVE_ROLES, OUTPUT_SCHEMAS, INPUT_SCHEMAS,
                            PRIORITY_WEIGHTS, SCORE_ATOL, SUM_RTOL, SUM_ATOL_KZT)
-from src.bundle_io import ValidationError, require
+from backend.core.bundle_io import ValidationError, require
 
 VALIDATOR_VERSION = '1.0.0'
 SCHEMAS = {name: [f.name for f in schema] for name, schema in OUTPUT_SCHEMAS.items() if name.endswith('.csv')}
@@ -325,7 +325,7 @@ def main():
     parser.add_argument('--candidate', action='store_true', help='Проверить staging/candidate.json до публикации')
     args = parser.parse_args()
     try:
-        from src.results import load_bundle
+        from backend.core.results import load_bundle
         bundle = load_bundle(args.out, candidate=args.candidate)
         check_inputs(bundle, args.data, args.expected_nodes)
         if args.candidate:

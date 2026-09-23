@@ -5,7 +5,7 @@ from datetime import date, datetime
 import numpy as np
 import pandas as pd
 
-from src.contracts import EXPECTED_NODE_COUNT, INPUT_SCHEMAS, SUM_ATOL_KZT, SUM_RTOL
+from backend.core.contracts import EXPECTED_NODE_COUNT, INPUT_SCHEMAS, SUM_ATOL_KZT, SUM_RTOL
 
 
 def _integer(frame: pd.DataFrame, column: str, filename: str, dtype: str) -> None:

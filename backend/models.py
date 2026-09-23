@@ -1,4 +1,4 @@
-"""HTTP schema; analytical file schemas remain in src.contracts."""
+"""HTTP schema; analytical file schemas remain in backend.core.contracts."""
 from typing import Annotated, Generic, Literal, TypeVar
 from pydantic import BaseModel, ConfigDict, Field, StrictStr, AfterValidator
 from uuid import UUID

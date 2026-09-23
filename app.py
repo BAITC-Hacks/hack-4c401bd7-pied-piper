@@ -16,6 +16,8 @@ from validate import ValidationError
 from src.bundle_io import resolve_run
 
 st.set_page_config(page_title='Money Graph · Очередь проверки', page_icon='◈', layout='wide')
+# Keep Streamlit tools (including Clear cache); hide only the deployment shortcut.
+st.html('<style>[data-testid="stAppDeployButton"] { display: none; }</style>')
 # Cached HTML must change when its renderer/template changes, even for the same run.
 GRAPH_REVISION = sha256(b''.join((Path(__file__).parent / 'src' / name).read_bytes()
                                 for name in ('graph_ui.py', 'graph.html'))).hexdigest()

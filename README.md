@@ -251,7 +251,7 @@ docker compose run --rm tests
 .\.venv\Scripts\python.exe -m pytest -q tests/test_role_semantics.py tests/test_a_verification.py
 ```
 
-До объединения веток команда frontend зафиксировала 83 пройденных теста, а backend — 89 на Windows и в Docker Linux (наборы имеют общие тесты, поэтому результаты не суммируются). Также выполнен сквозной HTTP-сценарий на официальных данных. Источники: [проверка backend](docs/backend-verification.md), [проверки UI](TECHNICAL_LANE_B.md), [аудит аналитики](AUDIT_LANE_A.md), [семантический QA](docs/qa-real-data.md), [проверки исходного CLI/Docker](docs/audit-sha256-20260923.md). Эти проверки подтверждают согласованность реализации, но не точность обнаружения нарушений.
+После объединения frontend и backend полный набор дал **111 passed** на Windows (70,65 с) и в Docker Linux (91,90 с). Последующие изменения панели Streamlit дополнительно проверены шестью UI/graph-тестами в обеих средах. Ранее также выполнен сквозной HTTP-сценарий backend на официальных данных. Источники: [проверка backend](docs/backend-verification.md), [проверки UI](TECHNICAL_LANE_B.md), [аудит аналитики](AUDIT_LANE_A.md), [семантический QA](docs/qa-real-data.md), [проверки исходного CLI/Docker](docs/audit-sha256-20260923.md). Эти проверки подтверждают согласованность реализации, но не точность обнаружения нарушений.
 
 Pipeline отклоняет публикацию, если измеренное время от начала чтения до завершения проверки кандидата достигает 300 секунд. Фактическое время конкретного запуска находится в `run.json → stage_runtimes_seconds`; оно не включает установку, сборку Docker и запуск UI.
 

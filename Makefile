@@ -9,9 +9,10 @@ DATA ?= data
 OUTPUTS ?= outputs
 PORT ?= 8502
 
-.PHONY: help setup pipeline validate ui run test demo
+.PHONY: help setup pipeline validate ui stop run test demo
 
 help:
+	@echo "make stop     Stop this project UI on port $(PORT)"
 	@echo "make setup    Install Python 3.12 environment and dependencies (uv required)"
 	@echo "make run      Calculate real data, validate, then start UI on port $(PORT)"
 	@echo "make ui       Open existing real results without recalculation"
@@ -34,6 +35,9 @@ validate:
 
 ui:
 	"$(PYTHON)" -m streamlit run app.py --server.address 127.0.0.1 --server.port $(PORT) -- --outputs "$(OUTPUTS)"
+
+stop:
+	"$(PYTHON)" scripts/stop_ui.py --port $(PORT)
 
 run:
 	$(MAKE) pipeline

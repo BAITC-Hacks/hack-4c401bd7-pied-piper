@@ -11,6 +11,7 @@ if /i "%~1"=="setup" goto setup
 if /i "%~1"=="pipeline" goto pipeline
 if /i "%~1"=="validate" goto validate
 if /i "%~1"=="ui" goto ui
+if /i "%~1"=="stop" goto stop
 if /i "%~1"=="run" goto run
 if /i "%~1"=="test" goto test
 if /i "%~1"=="demo" goto demo
@@ -18,6 +19,7 @@ echo Unknown command: "%~1". Use make.cmd help.
 exit /b 1
 
 :help
+echo make.cmd stop      Stop this project UI on the selected port
 echo make.cmd setup     Install environment and dependencies using uv
 echo make.cmd run       Calculate real data, validate, then start UI
 echo make.cmd ui        Open existing real results without recalculation
@@ -46,6 +48,10 @@ exit /b %errorlevel%
 
 :ui
 "%PYTHON%" -m streamlit run app.py --server.address 127.0.0.1 --server.port %PORT% -- --outputs "%OUTPUTS%"
+exit /b %errorlevel%
+
+:stop
+"%PYTHON%" scripts/stop_ui.py --port %PORT%
 exit /b %errorlevel%
 
 :run

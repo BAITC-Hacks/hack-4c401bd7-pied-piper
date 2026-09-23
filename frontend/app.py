@@ -15,6 +15,7 @@ from frontend.presentation import ROLE_GUIDANCE, priority_parts, priority_explan
 from backend.validate import ValidationError
 from backend.core.bundle_io import resolve_run
 from backend.core.csv_export import csv_download_bytes
+from backend.core.explanations import role_gate
 
 st.set_page_config(page_title='Money Graph · Очередь проверки', page_icon='◈', layout='wide')
 # Keep Streamlit tools (including Clear cache); hide only the deployment shortcut.
@@ -72,6 +73,14 @@ def render_client(bundle, row, ranks):
     st.caption('Приоритет задаёт порядок ручной проверки. Поддержка роли от 0 до 1 отражает согласованность правил. Оба показателя — не вероятность нарушения.')
     st.markdown('**Почему стоит посмотреть**')
     st.info(row.evidence)
+    st.markdown('**Почему назначена эта роль**')
+    st.write(role_gate(row, bundle.manifest['thresholds']))
+    if row.role != 'peripheral':
+        st.caption('Среди допущенных ролей выбрана роль с максимальной базовой оценкой. Пороги рассчитаны по текущей выборке; числа показаны с округлением.')
+    if pd.notna(row.alternative_role):
+        st.write(f'Ближайшая альтернатива: **{LABELS[row.alternative_role]}**. '
+                 f'Базовые оценки: {row[f"score_{row.role}"]:.3f} и {row.alternative_score:.3f}; '
+                 f'разрыв {row.role_margin:.3f}. Чем меньше разрыв, тем менее однозначен выбор.')
     st.write(priority_explanation(row))
     with st.expander('Из чего складывается приоритет'):
         st.dataframe(pd.DataFrame(priority_parts(row), columns=['Фактор', 'Баллы из 100']), hide_index=True,

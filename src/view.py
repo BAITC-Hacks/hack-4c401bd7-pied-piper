@@ -2,9 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from hashlib import sha256
 from io import BytesIO
-import json
 from pathlib import Path
 
 import networkx as nx
@@ -32,67 +30,40 @@ class Bundle:
     raw: dict[str, bytes]
 
 
-def load_bundle(directory: Path) -> Bundle:
-    directory = Path(directory)
+def load_bundle(directory: Path, candidate=False) -> Bundle:
+    from src.bundle_io import read_bundle_files
+    from src.contracts import OUTPUT_SCHEMAS
+    from validate import check_schema, check_metrics, SCORE_ATOL
     try:
-        manifest_bytes = (directory / 'run.json').read_bytes()
-        manifest = json.loads(manifest_bytes)
-        require(isinstance(manifest, dict), 'run.json: ожидается объект')
-        require(manifest.get('schema_version') == 1, 'Несовместимая schema_version: поддерживается 1')
-        hashes = manifest.get('output_sha256', {})
-        require(isinstance(hashes, dict), 'run.json: output_sha256 должен быть объектом')
-        raw = {}
-        for name in FILES:
-            require(name in hashes, f'run.json: отсутствует SHA256 для {name}')
-            raw[name] = (directory / name).read_bytes()
-            require(sha256(raw[name]).hexdigest() == hashes[name], f'{name}: SHA256 не совпадает; расчёт не завершён или файлы смешаны')
-        require((directory / 'run.json').read_bytes() == manifest_bytes, 'Расчёт обновился во время чтения; перезагрузите результаты')
+        _, manifest, raw = read_bundle_files(directory, candidate=candidate)
         frames = [read_csv(BytesIO(raw[name]), name) for name in SCHEMAS]
+        for frame, name in zip(frames, SCHEMAS):
+            check_schema(frame, OUTPUT_SCHEMAS[name], name, csv=True)
         metrics = pd.read_parquet(BytesIO(raw['node_metrics.parquet']))
         edges = pd.read_parquet(BytesIO(raw['edges.parquet']))
-        required = ['gid', 'depth', 'is_seed', 'in_deg', 'out_deg', 'in_kzt', 'out_kzt', 'in_tx', 'out_tx', 'pagerank']
-        columns(metrics, required, 'node_metrics')
+        for name, frame in [('node_metrics.parquet',metrics), ('edges.parquet',edges)]:
+            check_schema(frame, OUTPUT_SCHEMAS[name], name)
+        roles, clusters, top, report = validate_frames(*frames, metrics[['gid','depth','is_seed']], edges, manifest['counts']['nodes'])
+        for frame in (roles, metrics):
+            require(frame.gid.map(int).tolist() == sorted(frame.gid.map(int)), 'Строки nodes/metrics должны быть отсортированы по числовому gid')
+        require(clusters.cluster_id.tolist() == sorted(clusters.cluster_id), 'clusters: неверная сортировка')
+        require(list(zip(edges.src,edges.dst)) == sorted(zip(edges.src,edges.dst)), 'edges: неверная сортировка')
         metrics['gid'] = ids(metrics.gid)
+        for col in ('src','dst'):
+            edges[col] = ids(edges[col],col)
         require(not metrics.gid.duplicated().any(), 'node_metrics: повторные gid')
-        for col in ('src', 'dst'):
-            edges[col] = ids(edges[col], col)
-        numeric(metrics, ['depth', 'in_deg', 'out_deg', 'in_tx', 'out_tx'], 'node_metrics', integer=True)
-        numeric(metrics, ['in_kzt', 'out_kzt', 'pagerank'], 'node_metrics')
-        require(metrics[['in_deg', 'out_deg', 'in_tx', 'out_tx', 'in_kzt', 'out_kzt', 'pagerank']].ge(0).all().all(), 'node_metrics: отрицательная метрика')
-        require(type(manifest.get('n_nodes')) is int and manifest['n_nodes'] > 0, 'run.json: нужен n_nodes > 0')
-        roles, clusters, top, report = validate_frames(*frames, metrics[required[:3]], edges, manifest['n_nodes'])
-        metrics['is_seed'] = metrics.is_seed.astype(str).str.lower().isin(['true', '1'])
-        for field, endpoint, source, aggregation in (
-            ('in_deg', 'dst', 'src', 'nunique'), ('out_deg', 'src', 'dst', 'nunique'),
-            ('in_kzt', 'dst', 'sum_kzt', 'sum'), ('out_kzt', 'src', 'sum_kzt', 'sum'),
-            ('in_tx', 'dst', 'n_tx', 'sum'), ('out_tx', 'src', 'n_tx', 'sum')):
-            calculated = metrics.gid.map(edges.groupby(endpoint)[source].agg(aggregation)).fillna(0)
-            require(np.allclose(metrics[field], calculated, rtol=1e-9, atol=.01 if 'kzt' in field else 0),
-                    f'node_metrics: {field} не соответствует edges')
-        for name in set(metrics.columns) & set(roles.columns) - {'gid'}:
-            left = metrics.set_index('gid').loc[roles.gid, name].reset_index(drop=True)
+        for name in SCHEMAS['nodes_roles.csv'][1:]:
+            left = metrics.set_index('gid').loc[roles.gid,name].reset_index(drop=True)
             right = roles[name].reset_index(drop=True)
             if pd.api.types.is_numeric_dtype(right):
-                require(np.allclose(pd.to_numeric(left, errors='raise'), right, rtol=1e-9, atol=1e-9), f'node_metrics: отличается {name}')
+                require(np.allclose(left,right,rtol=0,atol=SCORE_ATOL), f'node_metrics: отличается {name}')
             else:
-                require(left.astype(str).tolist() == right.astype(str).tolist(), f'node_metrics: отличается {name}')
-        base_roles = roles[SCHEMAS['nodes_roles.csv']]
-        joined = base_roles.merge(metrics.drop(columns=[c for c in base_roles.columns if c != 'gid' and c in metrics]), on='gid', validate='one_to_one')
-        graph = make_graph(joined, edges)
-        groups = sorted(nx.weakly_connected_components(graph), key=lambda group: (-len(group), min(map(int, group))))
-        membership = {gid: i for i, group in enumerate(groups) for gid in group}
-        if 'component_id' not in joined:
-            joined['component_id'] = joined.gid.map(membership)
-        else:
-            columns(joined, ['component_id'], 'node_metrics')
-            numeric(joined, ['component_id'], 'node_metrics', integer=True)
-            check = joined.assign(actual_component=joined.gid.map(membership))
-            require(check.groupby('component_id').actual_component.nunique().eq(1).all() and
-                    check.groupby('actual_component').component_id.nunique().eq(1).all(), 'node_metrics: неверные компоненты')
-        return Bundle(joined, edges, clusters, top, manifest, report, raw)
+                require(left.astype(str).tolist()==right.astype(str).tolist(), f'node_metrics: отличается {name}')
+        check_metrics(metrics, edges, manifest, report)
+        return Bundle(metrics, edges, clusters, top, manifest, report, raw)
     except ValidationError:
         raise
-    except (OSError, ValueError, KeyError, TypeError) as exc:
+    except (OSError, ValueError, KeyError, TypeError, AssertionError) as exc:
         raise ValidationError(f'Нет корректного завершённого расчёта в {directory}: {exc}') from exc
 
 

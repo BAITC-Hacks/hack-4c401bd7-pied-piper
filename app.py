@@ -9,6 +9,7 @@ import streamlit as st
 
 from src.view import FILES, LABELS, ego_figure, load_bundle, make_graph, overview_figure, select_ego
 from validate import ValidationError
+from src.bundle_io import resolve_run
 
 st.set_page_config(page_title='Money Graph · Аналитика потоков', page_icon='◈', layout='wide')
 
@@ -45,14 +46,17 @@ def main():
             st.cache_data.clear()
         st.caption(f'Источник: {directory}')
     try:
-        fingerprint = tuple((name, (directory/name).stat().st_mtime_ns, (directory/name).stat().st_size)
+        resolved, pointer_id = resolve_run(directory)
+        fingerprint = tuple((name, (resolved/name).stat().st_mtime_ns, (resolved/name).stat().st_size)
                             for name in (*FILES, 'run.json'))
         with st.spinner('Проверяем целостность результатов…'):
-            bundle = cached_bundle(str(directory.resolve()), fingerprint)
+            bundle = cached_bundle(str(resolved.resolve()), fingerprint)
+            if pointer_id is not None and bundle.manifest['run_id'] != pointer_id:
+                raise ValidationError('current.json: run_id не совпадает с manifest')
     except (OSError, ValidationError) as exc:
         st.info('Нет завершённого расчёта для просмотра.')
         st.error(str(exc))
-        st.markdown('Передайте выгрузку Lane A: три CSV, `node_metrics.parquet`, `edges.parquet` и `run.json`.')
+        st.markdown('Передайте публикацию Lane A: `current.json` и каталог `runs/<run_id>/` с CSV, метриками, связями и `run.json` версии 1.0.0.')
         st.code('python pipeline.py --data data --out outputs', language='bash')
         st.caption('Команда pipeline относится к Lane A. Интерфейс не рассчитывает и не подменяет роли.')
         st.markdown('Для проверки интерфейса на отдельном синтетическом примере:')
@@ -146,9 +150,9 @@ def main():
                 st.metric('Исходящий поток', f'{row.out_kzt:,.0f} KZT')
                 st.write(f'Контрагенты: {row.in_deg} входящих / {row.out_deg} исходящих')
                 st.write(f'Транзакции: {row.in_tx} входящих / {row.out_tx} исходящих')
-                extra = [name for name in nodes if name.startswith('priority_') and name != 'priority_score']
+                extra = [name for name in nodes if name.startswith('contribution_')]
                 if extra:
-                    st.markdown('**Компоненты приоритета из расчёта**')
+                    st.markdown('**Вклады в приоритет из расчёта**')
                     st.dataframe(pd.DataFrame({'Компонента': extra, 'Значение': [row[name] for name in extra]}), hide_index=True)
                 top_reason = bundle.top[bundle.top.gid.eq(gid)]
                 if not top_reason.empty:

@@ -110,9 +110,9 @@ def make_fixture(output: Path, data: Path | None = None):
                 'role_distribution':{r:int(f.role.eq(r).sum()) for r in ROLES},
                 'warnings':['Синтетический fixture; не классификация реальных клиентов.'],
                 'validation':{'status':'passed','validator_version':'fixture-1.0.0'}}
-    (run/'run.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n')
+    (run/'run.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n', encoding='utf-8')
     temp = output/'current.tmp'
-    temp.write_text(json.dumps({'schema_version':'1.0.0','run_id':run_id})+'\n')
+    temp.write_text(json.dumps({'schema_version':'1.0.0','run_id':run_id})+'\n', encoding='utf-8')
     temp.replace(output/'current.json')
     return gids
 
